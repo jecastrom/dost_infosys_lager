@@ -44,17 +44,98 @@ interface ReturnPopupData {
   tracking: string;
 }
 
-// --- SCROLL WHEEL PICKER ---
-const ScrollPicker = ({ value, onChange, min = 0, max = 999, disabled = false, isDark = false }: {
+// --- PLUS/MINUS PICKER (Deutsche Post Style) ---
+const PlusMinusPicker = ({ value, onChange, min = 0, max = 999, disabled = false, isDark = false }: {
   value: number; onChange: (v: number) => void; min?: number; max?: number; disabled?: boolean; isDark?: boolean;
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempValue, setTempValue] = useState(String(value));
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const inc = () => { if (!disabled && value < max) onChange(value + 1); };
   const dec = () => { if (!disabled && value > min) onChange(value - 1); };
+  
+  const handleNumberClick = () => {
+    if (disabled) return;
+    setIsEditing(true);
+    setTempValue(String(value));
+    setTimeout(() => inputRef.current?.focus(), 10);
+  };
+
+  const handleBlur = () => {
+    setIsEditing(false);
+    const parsed = parseInt(tempValue) || 0;
+    const clamped = Math.max(min, Math.min(max, parsed));
+    onChange(clamped);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleBlur();
+    }
+  };
+
   return (
-    <div className={`flex flex-col items-center select-none ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
-      <button onClick={inc} className={`p-1.5 rounded-lg active:scale-90 transition-all ${isDark ? 'text-slate-400 hover:bg-slate-700 active:bg-slate-600' : 'text-slate-500 hover:bg-slate-100 active:bg-slate-200'}`}><ChevronsUp size={22} /></button>
-      <div className={`w-16 h-12 flex items-center justify-center text-xl font-bold font-mono rounded-xl border-2 my-0.5 ${isDark ? 'bg-slate-900 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`}>{value}</div>
-      <button onClick={dec} className={`p-1.5 rounded-lg active:scale-90 transition-all ${isDark ? 'text-slate-400 hover:bg-slate-700 active:bg-slate-600' : 'text-slate-500 hover:bg-slate-100 active:bg-slate-200'}`}><ChevronsDown size={22} /></button>
+    <div className={`flex items-center gap-1 select-none ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+      {/* MINUS BUTTON - RED */}
+      <button 
+        onClick={dec} 
+        disabled={disabled || value <= min}
+        className={`min-w-[48px] min-h-[48px] flex items-center justify-center rounded-lg font-bold text-white text-2xl active:scale-95 transition-all ${
+          disabled || value <= min 
+            ? 'bg-gray-400 cursor-not-allowed' 
+            : 'bg-red-600 hover:bg-red-500 active:bg-red-700'
+        }`}
+      >
+        −
+      </button>
+
+      {/* NUMBER - TAPPABLE */}
+      <div className="relative">
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={tempValue}
+            onChange={e => setTempValue(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            className={`w-20 h-12 text-center text-2xl font-bold font-mono rounded-lg border-2 ${
+              isDark 
+                ? 'bg-slate-900 border-blue-500 text-white' 
+                : 'bg-white border-blue-500 text-slate-900'
+            }`}
+            style={{ appearance: 'none', MozAppearance: 'textfield' }}
+          />
+        ) : (
+          <button
+            onClick={handleNumberClick}
+            disabled={disabled}
+            className={`w-20 h-12 flex items-center justify-center text-2xl font-bold font-mono rounded-lg border-2 transition-all ${
+              isDark 
+                ? 'bg-slate-900 border-slate-600 text-white hover:border-slate-500' 
+                : 'bg-white border-slate-300 text-slate-900 hover:border-slate-400'
+            }`}
+          >
+            {value}
+          </button>
+        )}
+      </div>
+
+      {/* PLUS BUTTON - GREEN */}
+      <button 
+        onClick={inc} 
+        disabled={disabled || value >= max}
+        className={`min-w-[48px] min-h-[48px] flex items-center justify-center rounded-lg font-bold text-white text-2xl active:scale-95 transition-all ${
+          disabled || value >= max 
+            ? 'bg-gray-400 cursor-not-allowed' 
+            : 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700'
+        }`}
+      >
+        +
+      </button>
     </div>
   );
 };
@@ -694,10 +775,10 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                         {linkedPoId && c.bisHeute > 0 && (
                           <div className="flex justify-between items-center"><span className={labelClass}>Bis heute</span><span className="font-mono text-sm opacity-60">{c.bisHeute}</span></div>
                         )}
-                        {/* SCROLL WHEEL PICKER */}
+                        {/* PLUS/MINUS PICKER */}
                         <div className="flex justify-between items-center gap-3">
                           <span className={labelClass}>Heute geliefert</span>
-                          <ScrollPicker value={line.qtyReceived} onChange={v => updateCartItem(idx, 'qtyReceived', v)} disabled={isAdminClose} isDark={isDark} />
+                          <PlusMinusPicker value={line.qtyReceived} onChange={v => updateCartItem(idx, 'qtyReceived', v)} disabled={isAdminClose} isDark={isDark} />
                         </div>
                         {linkedPoId && c.zuViel > 0 && (
                           <div className="flex justify-between items-center">
@@ -817,14 +898,14 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                                   {linkedPoId && <td className="px-4 py-3 text-center font-mono text-sm">{calc.bestellt}</td>}
                                   {linkedPoId && <td className="px-4 py-3 text-center font-mono text-sm opacity-60">{calc.bisHeute}</td>}
                                   <td className="px-4 py-3 text-center">
-                                    <input 
-                                      type="number" 
-                                      min="0" 
-                                      value={cartLine.qtyReceived} 
-                                      onChange={e => updateCartItem(cartIdx, 'qtyReceived', parseInt(e.target.value) || 0)}
-                                      disabled={isAdminClose}
-                                      className={`w-20 px-2 py-1 text-center font-mono font-bold border rounded ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}
-                                    />
+                                    <div className="flex justify-center">
+                                      <PlusMinusPicker 
+                                        value={cartLine.qtyReceived} 
+                                        onChange={v => updateCartItem(cartIdx, 'qtyReceived', v)}
+                                        disabled={isAdminClose}
+                                        isDark={isDark}
+                                      />
+                                    </div>
                                   </td>
                                   {linkedPoId && <td className="px-4 py-3 text-center">{calc.offen > 0 ? <span className="font-mono text-sm font-bold text-amber-500 flex items-center justify-center gap-1"><AlertTriangle size={12}/>{calc.offen}</span> : <span className="opacity-30 text-sm">–</span>}</td>}
                                   {linkedPoId && <td className="px-4 py-3 text-center"><span className={`font-mono text-sm font-bold ${calc.zuViel > 0 ? 'text-orange-500' : 'opacity-30'}`}>{calc.zuViel > 0 ? `+${calc.zuViel}` : '0'}</span></td>}
