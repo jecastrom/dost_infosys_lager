@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   MOCK_ITEMS, MOCK_RECEIPT_HEADERS, MOCK_RECEIPT_ITEMS, MOCK_COMMENTS, 
@@ -21,6 +20,78 @@ import { DocumentationPage } from './components/DocumentationPage';
 import { StockLogView } from './components/StockLogView';
 import { LogicInspector } from './components/LogicInspector';
 import { SupplierView } from './components/SupplierView';
+
+// Error Boundary Component
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error Boundary caught an error:', error, errorInfo);
+  }
+
+  handleReload = () => {
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-900 p-4">
+          <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 text-center">
+            <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+              Etwas ist schiefgelaufen
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400 mb-6">
+              Die Anwendung ist auf einen unerwarteten Fehler gestoßen. Bitte laden Sie die Seite neu.
+            </p>
+            {this.state.error && (
+              <details className="mb-6 text-left">
+                <summary className="cursor-pointer text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  Technische Details
+                </summary>
+                <pre className="text-xs bg-slate-100 dark:bg-slate-900 p-3 rounded-lg overflow-x-auto text-red-600 dark:text-red-400">
+                  {this.state.error.toString()}
+                </pre>
+              </details>
+            )}
+            <button
+              onClick={this.handleReload}
+              className="w-full px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-500 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Seite neu laden
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 export default function App() {
   // State
@@ -275,7 +346,7 @@ export default function App() {
       bestellNr: po.id,
       lieferdatum: new Date().toISOString().split('T')[0],
       lieferant: po.supplier,
-      status: 'In Prüfung',
+      status: 'In PrÃ¼fung',
       timestamp,
       itemCount: 0,
       warehouseLocation: 'Wareneingang',
@@ -313,7 +384,7 @@ export default function App() {
             return [...prev, {
                 id: `RM-${Date.now()}`,
                 poId,
-                status: 'In Prüfung' as any, 
+                status: 'In PrÃ¼fung' as any, 
                 deliveries: [initialDelivery]
             }];
         }
@@ -414,14 +485,14 @@ export default function App() {
              });
 
              // Apply Logic: Only override if it's not already a critical error status
-             const isErrorStatus = ['Abgelehnt', 'Schaden', 'Schaden + Falsch', 'Falsch geliefert', 'Beschädigt'].includes(finalReceiptStatus);
+             const isErrorStatus = ['Abgelehnt', 'Schaden', 'Schaden + Falsch', 'Falsch geliefert', 'BeschÃ¤digt'].includes(finalReceiptStatus);
              
              if (!isErrorStatus) {
                  if (forceClose) {
                      // FORCE CLOSE: Treat as 'Gebucht' regardless of math
                      finalReceiptStatus = 'Gebucht'; 
                  } else if (totalReceivedIncludingCurrent > totalOrdered) {
-                     finalReceiptStatus = 'Übermenge';
+                     finalReceiptStatus = 'Ãœbermenge';
                  } else if (totalReceivedIncludingCurrent < totalOrdered) {
                      // If we received less than total ordered, it is Partial.
                      finalReceiptStatus = 'Teillieferung';
@@ -555,7 +626,7 @@ export default function App() {
         const returnItems = cartItems.filter(c => c.quantityRejected > 0);
         
         const returnMsg = returnItems.map(c => 
-            `Rücksendung: ${c.quantityRejected}x ${c.item.name} (${c.rejectionReason || 'Sonstiges'}). ` +
+            `RÃ¼cksendung: ${c.quantityRejected}x ${c.item.name} (${c.rejectionReason || 'Sonstiges'}). ` +
             (c.returnCarrier ? `Via ${c.returnCarrier} ${c.returnTrackingId ? `(${c.returnTrackingId})` : ''}` : '')
         ).join('\n');
 
@@ -585,7 +656,7 @@ export default function App() {
                      messages: [...ticket.messages, {
                          id: crypto.randomUUID(),
                          author: 'System',
-                         text: `📦 Logistik Update:\n${returnMsg}`,
+                         text: `ðŸ“¦ Logistik Update:\n${returnMsg}`,
                          timestamp: Date.now() + 100, // +100ms to ensure it appears after creation msg
                          type: 'system'
                      }]
@@ -597,10 +668,10 @@ export default function App() {
 
     // --- 6. SIMULATE NOTIFICATION FOR PROJECT COMPLETION ---
     if (isProject && finalReceiptStatus === 'Gebucht') {
-        console.log(`[M365 Mock] Sending email to 'technik-verteiler@dost.de': "Wareneingang für Projekt ${headerData.bestellNr} abgeschlossen. Bereit zur Abholung."`);
+        console.log(`[M365 Mock] Sending email to 'technik-verteiler@dost.de': "Wareneingang fÃ¼r Projekt ${headerData.bestellNr} abgeschlossen. Bereit zur Abholung."`);
         // Visual feedback via setTimeout to allow state to settle or simple alert
         setTimeout(() => {
-            alert("📧 Automatische E-Mail an das Technik-Team gesendet (Abholbereit).");
+            alert("ðŸ“§ Automatische E-Mail an das Technik-Team gesendet (Abholbereit).");
         }, 500);
     }
 
@@ -652,7 +723,7 @@ export default function App() {
           });
       }
 
-      setReceiptHeaders(prev => prev.map(h => h.batchId === batchId ? { ...h, status: 'In Prüfung' } : h));
+      setReceiptHeaders(prev => prev.map(h => h.batchId === batchId ? { ...h, status: 'In PrÃ¼fung' } : h));
       
       if (linkedPO) {
            setPurchaseOrders(prev => prev.map(po => {
@@ -682,31 +753,32 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen flex transition-colors duration-300 ${
-        theme === 'dark' ? 'bg-[#0f172a] text-slate-100' : 
-        theme === 'soft' ? 'bg-[#F5F5F6] text-[#323338]' : 
-        'bg-[#f8fafc] text-slate-900'
-    }`}>
-      
-      <Sidebar 
-        theme={theme}
-        activeModule={activeModule}
-        onNavigate={handleNavigation}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        mode={sidebarMode}
-      />
-      
-      {sidebarOpen && (
-        <div 
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
-            onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <main className={`flex-1 flex flex-col min-w-0 h-screen overflow-hidden transition-all duration-300 ${
-         sidebarMode === 'slim' ? 'lg:ml-20' : 'lg:ml-64'
+    <ErrorBoundary>
+      <div className={`min-h-screen flex transition-colors duration-300 ${
+          theme === 'dark' ? 'bg-[#0f172a] text-slate-100' : 
+          theme === 'soft' ? 'bg-[#F5F5F6] text-[#323338]' : 
+          'bg-[#f8fafc] text-slate-900'
       }`}>
+        
+        <Sidebar 
+          theme={theme}
+          activeModule={activeModule}
+          onNavigate={handleNavigation}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          mode={sidebarMode}
+        />
+        
+        {sidebarOpen && (
+          <div 
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+              onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        <main className={`flex-1 flex flex-col min-w-0 h-screen overflow-hidden transition-all duration-300 ${
+           sidebarMode === 'slim' ? 'lg:ml-20' : 'lg:ml-64'
+        }`}>
          <Header 
             theme={theme}
             toggleTheme={toggleTheme}
@@ -870,5 +942,6 @@ export default function App() {
          </div>
       </main>
     </div>
+    </ErrorBoundary>
   );
 }

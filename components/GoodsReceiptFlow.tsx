@@ -233,6 +233,9 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
   const [returnPopup, setReturnPopup] = useState<ReturnPopupData | null>(null);
   const [cardIdx, setCardIdx] = useState(0);
 
+  // Derived loading state
+  const isLoading = submissionStatus === 'submitting';
+
   // --- LIVE MATH ---
   const getLineCalc = (line: CartItem) => {
     const bestellt = line.orderedQty || 0;
@@ -572,6 +575,35 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
         </div>, document.body
       )}
 
+      {/* LOADING OVERLAY */}
+      {submissionStatus === 'submitting' && createPortal(
+        <div className="fixed inset-0 z-[100000] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-2xl text-center max-w-sm w-full animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 mx-auto mb-4 relative">
+              <Loader2 size={64} className="text-[#0077B5] animate-spin" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">Wird gespeichert...</h3>
+            <p className="text-slate-600 dark:text-slate-400">Wareneingang wird erfasst.</p>
+          </div>
+        </div>, document.body
+      )}
+
+      {/* ERROR OVERLAY */}
+      {submissionStatus === 'error' && createPortal(
+        <div className="fixed inset-0 z-[100000] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-2xl text-center max-w-sm w-full animate-in zoom-in-95 duration-300">
+            <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-in zoom-in duration-500">
+              <AlertCircle size={32} className="text-white" strokeWidth={3} />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">Fehler beim Speichern</h3>
+            <p className="text-slate-600 dark:text-slate-400 mb-6">Bitte versuchen Sie es erneut.</p>
+            <button onClick={() => setSubmissionStatus('idle')} className="w-full px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-500 transition-colors">
+              Schließen
+            </button>
+          </div>
+        </div>, document.body
+      )}
+
       {/* RETURN POPUP */}
       {returnPopup && createPortal(
         <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
@@ -644,24 +676,24 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className={`${labelClass} mb-2 block`}>Lieferschein-Nr. *</label>
-                <input value={headerData.lieferscheinNr} onChange={e => setHeaderData(prev => ({...prev, lieferscheinNr: e.target.value}))} placeholder="LS-2024-001" className={inputClass} />
+                <input value={headerData.lieferscheinNr} onChange={e => setHeaderData(prev => ({...prev, lieferscheinNr: e.target.value}))} disabled={isLoading} placeholder="LS-2024-001" className={inputClass} />
               </div>
               <div>
                 <label className={`${labelClass} mb-2 block`}>Lieferdatum</label>
-                <input type="date" value={headerData.lieferdatum} onChange={e => setHeaderData(prev => ({...prev, lieferdatum: e.target.value}))} className={inputClass} />
+                <input type="date" value={headerData.lieferdatum} onChange={e => setHeaderData(prev => ({...prev, lieferdatum: e.target.value}))} disabled={isLoading} className={inputClass} />
               </div>
             </div>
 
             {!linkedPoId && (
               <div>
                 <label className={`${labelClass} mb-2 block`}>Lieferant</label>
-                <input value={headerData.lieferant} onChange={e => setHeaderData(prev => ({...prev, lieferant: e.target.value}))} placeholder="Battery Kutter" className={inputClass} />
+                <input value={headerData.lieferant} onChange={e => setHeaderData(prev => ({...prev, lieferant: e.target.value}))} disabled={isLoading} placeholder="Battery Kutter" className={inputClass} />
               </div>
             )}
 
             <div>
               <label className={`${labelClass} mb-2 block`}>Lagerort</label>
-              <select value={headerData.warehouseLocation} onChange={e => setHeaderData(prev => ({...prev, warehouseLocation: e.target.value}))} className={inputClass}>
+              <select value={headerData.warehouseLocation} onChange={e => setHeaderData(prev => ({...prev, warehouseLocation: e.target.value}))} disabled={isLoading} className={inputClass}>
                 <option value="">Wählen...</option>
                 {LAGERORT_OPTIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
               </select>
@@ -671,7 +703,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
               <div className="flex items-center justify-between mb-3">
                 <span className="font-bold text-sm">Bestellung verknüpfen (optional)</span>
                 {linkedPoId && (
-                  <button onClick={() => { setLinkedPoId(null); setHeaderData(prev => ({ ...prev, bestellNr: '', lieferant: '' })); setCart([]); }} className="text-xs font-bold text-red-500 hover:underline flex items-center gap-1">
+                  <button onClick={() => { setLinkedPoId(null); setHeaderData(prev => ({ ...prev, bestellNr: '', lieferant: '' })); setCart([]); }} disabled={isLoading} className="text-xs font-bold text-red-500 hover:underline flex items-center gap-1 disabled:opacity-50">
                     <X size={14}/> Trennen
                   </button>
                 )}
@@ -685,14 +717,14 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                   <div className="text-xs opacity-60 mt-1">{headerData.lieferant}</div>
                 </div>
               ) : (
-                <button onClick={() => setShowPoModal(true)} className="w-full px-4 py-3 rounded-xl font-bold border-2 border-dashed transition-all hover:border-[#0077B5] hover:bg-[#0077B5]/5 dark:border-slate-700 dark:hover:border-blue-500 dark:hover:bg-blue-500/10">
+                <button onClick={() => setShowPoModal(true)} disabled={isLoading} className="w-full px-4 py-3 rounded-xl font-bold border-2 border-dashed transition-all hover:border-[#0077B5] hover:bg-[#0077B5]/5 dark:border-slate-700 dark:hover:border-blue-500 dark:hover:bg-blue-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
                   <Plus size={20} className="inline mr-2"/> Bestellung auswählen
                 </button>
               )}
             </div>
 
             {linkedPoId && (
-              <div className={`p-4 rounded-xl border flex items-center gap-4 text-left cursor-pointer transition-colors ${isAdminClose ? (isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200') : (isDark ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300')}`} onClick={() => handleAdminCloseToggle(!isAdminClose)}>
+              <div className={`p-4 rounded-xl border flex items-center gap-4 text-left transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${isAdminClose ? (isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200') : (isDark ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300')}`} onClick={() => !isLoading && handleAdminCloseToggle(!isAdminClose)}>
                 <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isAdminClose ? 'bg-purple-600 border-purple-600 text-white' : 'border-slate-400'}`}>{isAdminClose && <Check size={14} strokeWidth={3} />}</div>
                 <div className="flex-1">
                   <div className={`font-bold text-sm ${isAdminClose ? 'text-purple-600 dark:text-purple-400' : ''}`}>Admin-Modus: Bestellung ohne Lieferung schließen</div>
@@ -714,17 +746,19 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   onFocus={() => {
+                    if (isLoading) return;
                     if (searchInputRef.current) {
                       const rect = searchInputRef.current.getBoundingClientRect();
                       setSearchDropdownCoords({ top: rect.bottom + window.scrollY + 8, left: rect.left + window.scrollX, width: rect.width });
                     }
                     setShowSearchDropdown(true);
                   }}
+                  disabled={isLoading}
                   placeholder="Artikel hinzufügen..."
                   className={`w-full pl-11 ${inputClass}`}
                 />
                 <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                {showSearchDropdown && searchTerm && createPortal(
+                {showSearchDropdown && searchTerm && !isLoading && createPortal(
                   <div style={{ position: 'absolute', top: `${searchDropdownCoords.top}px`, left: `${searchDropdownCoords.left}px`, width: `${searchDropdownCoords.width}px` }} className={`z-[100000] rounded-xl border shadow-2xl max-h-80 overflow-y-auto ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
                     {existingItems.filter(i => i.name.toLowerCase().includes(searchTerm.toLowerCase()) || i.sku.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 8).map(item => (
                       <button key={item.id} onClick={() => addToCart(item)} className={`w-full text-left px-4 py-3 border-b last:border-b-0 transition-colors ${isDark ? 'border-slate-800 hover:bg-slate-800' : 'border-slate-100 hover:bg-slate-50'}`}>
@@ -778,7 +812,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                         {/* PLUS/MINUS PICKER */}
                         <div className="flex justify-between items-center gap-3">
                           <span className={labelClass}>Heute geliefert</span>
-                          <PlusMinusPicker value={line.qtyReceived} onChange={v => updateCartItem(idx, 'qtyReceived', v)} disabled={isAdminClose} isDark={isDark} />
+                          <PlusMinusPicker value={line.qtyReceived} onChange={v => updateCartItem(idx, 'qtyReceived', v)} disabled={isAdminClose || isLoading} isDark={isDark} />
                         </div>
                         {linkedPoId && c.zuViel > 0 && (
                           <div className="flex justify-between items-center">
@@ -902,7 +936,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                                       <PlusMinusPicker 
                                         value={cartLine.qtyReceived} 
                                         onChange={v => updateCartItem(cartIdx, 'qtyReceived', v)}
-                                        disabled={isAdminClose}
+                                        disabled={isAdminClose || isLoading}
                                         isDark={isDark}
                                       />
                                     </div>
@@ -996,7 +1030,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
             </div>
 
             {(isPartialDelivery || isAdminClose) && (
-              <div className={`p-4 rounded-xl border flex items-center gap-4 text-left cursor-pointer transition-colors ${forceClose ? (isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200') : (isDark ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300')}`} onClick={() => setForceClose(!forceClose)}>
+              <div className={`p-4 rounded-xl border flex items-center gap-4 text-left transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${forceClose ? (isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200') : (isDark ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300')}`} onClick={() => !isLoading && setForceClose(!forceClose)}>
                 <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${forceClose ? 'bg-purple-600 border-purple-600 text-white' : 'border-slate-400'}`}>{forceClose && <Check size={14} strokeWidth={3} />}</div>
                 <div className="flex-1">
                   <div className={`font-bold text-sm ${forceClose ? 'text-purple-600 dark:text-purple-400' : ''}`}>Manuell schließen (Restmenge stornieren)</div>
@@ -1010,11 +1044,14 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
 
       {/* STICKY FOOTER - PINNED TO BOTTOM */}
       <div className={`sticky bottom-0 z-10 p-4 md:p-5 border-t flex justify-between shrink-0 ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-        {step > 1 ? <button onClick={() => setStep(prev => (prev - 1) as any)} className="px-6 py-3 rounded-xl font-bold bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">Zurück</button> : <div/>}
+        {step > 1 ? <button onClick={() => setStep(prev => (prev - 1) as any)} disabled={isLoading} className="px-6 py-3 rounded-xl font-bold bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed">Zurück</button> : <div/>}
         {step < 3 ? (
-          <button onClick={() => setStep(prev => (prev + 1) as any)} disabled={step === 1 ? !headerData.lieferscheinNr : cart.length === 0} className="px-8 py-3 bg-[#0077B5] text-white rounded-xl font-bold disabled:opacity-50">Weiter</button>
+          <button onClick={() => setStep(prev => (prev + 1) as any)} disabled={isLoading || (step === 1 ? !headerData.lieferscheinNr : cart.length === 0)} className="px-8 py-3 bg-[#0077B5] text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed">Weiter</button>
         ) : (
-          <button onClick={() => { setSubmissionStatus('submitting'); setTimeout(() => setSubmissionStatus('success'), 800); }} className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-500">Buchen</button>
+          <button onClick={() => { setSubmissionStatus('submitting'); setTimeout(() => setSubmissionStatus('success'), 800); }} disabled={isLoading} className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            {isLoading && <Loader2 size={16} className="animate-spin" />}
+            Buchen
+          </button>
         )}
       </div>
 
