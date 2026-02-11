@@ -49,7 +49,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
        {/* Header Actions */}
        <div className="flex flex-col md:flex-row justify-between items-end gap-4">
           <div>
-             <h2 className="text-2xl font-bold mb-1">Lager Ãœbersicht</h2>
+             <h2 className="text-2xl font-bold mb-1">Lager Übersicht</h2>
              <p className="text-slate-500 text-sm">Prozess-Status & Bestands-Highlights.</p>
           </div>
           <div className="flex items-center gap-2">
@@ -72,10 +72,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
        </div>
 
-       {/* OPERATIVE ÃœBERSICHT (WORKFLOW PULSE) */}
+       {/* OPERATIVE ÜBERSICHT (WORKFLOW PULSE) */}
        <div className="space-y-3">
           <h3 className={`text-xs font-bold uppercase tracking-wider px-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            Operative Ãœbersicht
+            Operative Übersicht
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
              {/* Card 1: Einkauf */}
@@ -113,12 +113,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                     <div className="text-left">
                         <div className={`text-3xl font-black leading-none mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>{metrics.pendingReceipts}</div>
-                        <div className={`text-xs font-bold uppercase tracking-wide ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>Warten auf PrÃ¼fung</div>
+                        <div className={`text-xs font-bold uppercase tracking-wide ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>Warten auf Prüfung</div>
                     </div>
                 </div>
              </button>
 
-             {/* Card 3: QualitÃ¤t / Tickets */}
+             {/* Card 3: Qualität / Tickets */}
              <button 
                 onClick={() => onNavigate('receipt-management')}
                 className={`p-5 rounded-2xl border flex items-center justify-between transition-all group ${
@@ -152,7 +152,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
        <div className="space-y-3">
           <div className="flex justify-between items-end px-1">
              <h3 className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-               Letzte AktivitÃ¤ten
+               Letzte Aktivitäten
              </h3>
              <button 
                onClick={() => onNavigate('stock-logs')}
@@ -177,7 +177,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                  <tbody className="divide-y divide-slate-500/10">
                     {recentLogs.length === 0 ? (
                         <tr>
-                            <td colSpan={5} className="p-8 text-center text-slate-500 italic">Keine AktivitÃ¤ten verzeichnet.</td>
+                            <td colSpan={5} className="p-8 text-center text-slate-500 italic">Keine Aktivitäten verzeichnet.</td>
                         </tr>
                     ) : (
                         recentLogs.map(log => {
@@ -210,7 +210,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                     </span>
                                                 ) : (
                                                     <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${isDark ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
-                                                        <FileText size={10} /> RegulÃ¤r
+                                                        <FileText size={10} /> Regulär
                                                     </span>
                                                 )}
                                                 {log.source && (

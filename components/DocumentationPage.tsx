@@ -79,7 +79,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
             }`}
         >
             <div className="flex items-center gap-2">
-                <ArrowLeft size={16} /> {lang === 'de' ? 'SchlieÃŸen' : 'Close'}
+                <ArrowLeft size={16} /> {lang === 'de' ? 'Schließen' : 'Close'}
             </div>
         </button>
       </div>
@@ -117,12 +117,12 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
             <div className="space-y-6 overflow-y-auto flex-1">
                 <div>
                     <div className="text-[10px] font-bold uppercase tracking-wider opacity-50 mb-3 px-4">Core Docs</div>
-                    <NavItem id="intro" label={lang === 'de' ? "EinfÃ¼hrung & Stack" : "Introduction & Stack"} icon={<Layout size={18} />} />
+                    <NavItem id="intro" label={lang === 'de' ? "Einführung & Stack" : "Introduction & Stack"} icon={<Layout size={18} />} />
                     <NavItem id="datamodel" label={lang === 'de' ? "Daten-Modell" : "Data Model"} icon={<Database size={18} />} />
                 </div>
                 <div>
                     <div className="text-[10px] font-bold uppercase tracking-wider opacity-50 mb-3 px-4">Logic & Flow</div>
-                    <NavItem id="logic" label={lang === 'de' ? "GeschÃ¤ftslogik (Mathe)" : "Business Logic (Math)"} icon={<Calculator size={18} />} />
+                    <NavItem id="logic" label={lang === 'de' ? "Geschäftslogik (Mathe)" : "Business Logic (Math)"} icon={<Calculator size={18} />} />
                     <NavItem id="workflows" label={lang === 'de' ? "Status System" : "Status System"} icon={<GitBranch size={18} />} />
                 </div>
             </div>
@@ -139,7 +139,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                             <h2 className="text-3xl font-bold mb-2">{lang === 'de' ? 'Systemarchitektur' : 'System Architecture'}</h2>
                             <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                                 {lang === 'de' 
-                                    ? 'Dost Lager ist eine Single-Page-Application (SPA), die als High-Performance Frontend fÃ¼r komplexes Bestandsmanagement dient.' 
+                                    ? 'Dost Lager ist eine Single-Page-Application (SPA), die als High-Performance Frontend für komplexes Bestandsmanagement dient.' 
                                     : 'Dost Lager is a Single-Page-Application (SPA) serving as a high-performance frontend for complex inventory management.'}
                             </p>
                         </div>
@@ -147,7 +147,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <DocCard title="Tech Stack" icon={<Code size={24}/>}>
                                 <div className="space-y-4">
-                                    <p>{lang === 'de' ? 'Modernste Web-Technologien fÃ¼r maximale Performance und Wartbarkeit.' : 'Modern web technologies for maximum performance and maintainability.'}</p>
+                                    <p>{lang === 'de' ? 'Modernste Web-Technologien für maximale Performance und Wartbarkeit.' : 'Modern web technologies for maximum performance and maintainability.'}</p>
                                     <div className="flex flex-wrap gap-2">
                                         <TechBadge label="React 18" />
                                         <TechBadge label="TypeScript 5" />
@@ -168,11 +168,11 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                     <ul className="space-y-2 text-xs">
                                         <li className="flex items-center gap-2">
                                             <CheckCircle2 size={14} className="text-emerald-500" />
-                                            <span><strong>App.tsx:</strong> {lang === 'de' ? 'HÃ¤lt den globalen State (Orders, Inventory).' : 'Holds the global state (Orders, Inventory).'}</span>
+                                            <span><strong>App.tsx:</strong> {lang === 'de' ? 'Hält den globalen State (Orders, Inventory).' : 'Holds the global state (Orders, Inventory).'}</span>
                                         </li>
                                         <li className="flex items-center gap-2">
                                             <CheckCircle2 size={14} className="text-emerald-500" />
-                                            <span><strong>types.ts:</strong> {lang === 'de' ? 'Definiert die unverÃ¤nderlichen Schema-Gesetze.' : 'Defines the immutable schema laws.'}</span>
+                                            <span><strong>types.ts:</strong> {lang === 'de' ? 'Definiert die unveränderlichen Schema-Gesetze.' : 'Defines the immutable schema laws.'}</span>
                                         </li>
                                         <li className="flex items-center gap-2">
                                             <CheckCircle2 size={14} className="text-emerald-500" />
@@ -188,7 +188,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                 <Cpu size={20} /> {lang === 'de' ? 'Design Philosophie' : 'Design Philosophy'}
                             </h3>
                             <p className={`text-sm leading-relaxed ${isDark ? 'text-blue-200' : 'text-blue-800'}`}>
-                                <strong>Mobile First & Touch-Friendly:</strong> {lang === 'de' ? 'Alle interaktiven Elemente sind fÃ¼r die Bedienung auf Tablets im AuÃŸeneinsatz optimiert (Min-Height 44px).' : 'All interactive elements are optimized for tablet use in the field (Min-Height 44px).'}
+                                <strong>Mobile First & Touch-Friendly:</strong> {lang === 'de' ? 'Alle interaktiven Elemente sind für die Bedienung auf Tablets im Außeneinsatz optimiert (Min-Height 44px).' : 'All interactive elements are optimized for tablet use in the field (Min-Height 44px).'}
                                 <br/><br/>
                                 <strong>Strict Typing:</strong> {lang === 'de' ? 'Es werden keine `any` Typen verwendet. Jede Datenstruktur (PO, Receipt, Item) ist in `types.ts` streng definiert, um Laufzeitfehler zu verhindern.' : 'No `any` types are used. Every data structure (PO, Receipt, Item) is strictly defined in `types.ts` to prevent runtime errors.'}
                             </p>
@@ -203,7 +203,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                             <h2 className="text-3xl font-bold mb-2">{lang === 'de' ? 'Daten-Modell' : 'Data Model'}</h2>
                             <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                                 {lang === 'de' 
-                                    ? 'Das HerzstÃ¼ck der Anwendung ist die "Heilige Dreifaltigkeit" des Einkaufs:' 
+                                    ? 'Das Herzstück der Anwendung ist die "Heilige Dreifaltigkeit" des Einkaufs:' 
                                     : 'The core of the application is the "Holy Trinity" of procurement:'} <br/>
                                 Bestellung &rarr; Empfangs-Master &rarr; Liefer-Log.
                             </p>
@@ -216,7 +216,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                 <div className="absolute top-4 right-4 text-xs font-mono opacity-50">01</div>
                                 <div className="mb-3 p-3 rounded-xl bg-blue-500/10 text-blue-500 w-fit"><FileText size={24} /></div>
                                 <h3 className="font-bold text-lg mb-2">PurchaseOrder</h3>
-                                <p className="text-xs opacity-70 mb-4">{lang === 'de' ? 'Der unverÃ¤nderliche "Plan". Definiert WAS wir wollen und WANN.' : 'The immutable "Plan". Defines WHAT we want and WHEN.'}</p>
+                                <p className="text-xs opacity-70 mb-4">{lang === 'de' ? 'Der unveränderliche "Plan". Definiert WAS wir wollen und WANN.' : 'The immutable "Plan". Defines WHAT we want and WHEN.'}</p>
                                 <div className={`text-[10px] font-mono p-2 rounded ${isDark ? 'bg-slate-950' : 'bg-slate-100'}`}>
                                     id: string;<br/>
                                     status: 'Offen' | ...;<br/>
@@ -234,7 +234,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                 <div className="absolute top-4 right-4 text-xs font-mono opacity-50">02</div>
                                 <div className="mb-3 p-3 rounded-xl bg-purple-500/10 text-purple-500 w-fit"><Layers size={24} /></div>
                                 <h3 className="font-bold text-lg mb-2">ReceiptMaster</h3>
-                                <p className="text-xs opacity-70 mb-4">{lang === 'de' ? 'Der "Container" fÃ¼r diesen Vorgang. HÃ¤lt den aktuellen Status.' : 'The "Container" for this process. Holds the current status.'}</p>
+                                <p className="text-xs opacity-70 mb-4">{lang === 'de' ? 'Der "Container" für diesen Vorgang. Hält den aktuellen Status.' : 'The "Container" for this process. Holds the current status.'}</p>
                                 <div className={`text-[10px] font-mono p-2 rounded ${isDark ? 'bg-slate-950' : 'bg-slate-100'}`}>
                                     poId: string;<br/>
                                     status: ReceiptMasterStatus;<br/>
@@ -266,7 +266,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                             <DocCard title="Eternal Identity (Status)" icon={<ShieldCheck size={24}/>}>
                                 <p className="mb-4">
                                     {lang === 'de' 
-                                        ? 'Eine Bestellung wird mit einem Zweck geboren und behÃ¤lt diesen fÃ¼r immer. Dieser "Eternal Status" bestimmt das Verhalten im gesamten System.'
+                                        ? 'Eine Bestellung wird mit einem Zweck geboren und behält diesen für immer. Dieser "Eternal Status" bestimmt das Verhalten im gesamten System.'
                                         : 'An order is born with a purpose and keeps it forever. This "Eternal Status" determines behavior throughout the system.'}
                                 </p>
                                 <div className="space-y-3">
@@ -276,7 +276,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                     </div>
                                     <div className={`p-3 rounded-xl border flex items-center gap-3 ${isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
                                         <div className="font-bold uppercase text-xs tracking-wider">Lager</div>
-                                        <div className="text-xs opacity-80">{lang === 'de' ? 'Standard. Ware erhÃ¶ht den `stockLevel` im Inventar sofort.' : 'Standard. Goods increase the `stockLevel` in inventory immediately.'}</div>
+                                        <div className="text-xs opacity-80">{lang === 'de' ? 'Standard. Ware erhöht den `stockLevel` im Inventar sofort.' : 'Standard. Goods increase the `stockLevel` in inventory immediately.'}</div>
                                     </div>
                                 </div>
                             </DocCard>
@@ -310,10 +310,10 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                 {activeSection === 'logic' && (
                     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
                         <div>
-                            <h2 className="text-3xl font-bold mb-2">{lang === 'de' ? 'GeschÃ¤ftslogik & Mathe' : 'Business Logic & Math'}</h2>
+                            <h2 className="text-3xl font-bold mb-2">{lang === 'de' ? 'Geschäftslogik & Mathe' : 'Business Logic & Math'}</h2>
                             <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                                 {lang === 'de' 
-                                    ? 'Die Regeln fÃ¼r Warenbewegungen, Korrekturen und Bestandsberechnung.'
+                                    ? 'Die Regeln für Warenbewegungen, Korrekturen und Bestandsberechnung.'
                                     : 'Rules for goods movements, corrections, and inventory calculation.'}
                             </p>
                         </div>
@@ -330,22 +330,22 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                         </p>
                                         <ul className="space-y-2 text-sm opacity-80">
                                             <li className="flex items-center gap-2"><Truck size={14}/> <strong>Received:</strong> {lang === 'de' ? 'Was der LKW abgeladen hat.' : 'What the truck unloaded.'}</li>
-                                            <li className="flex items-center gap-2"><Ban size={14}/> <strong>Rejected:</strong> {lang === 'de' ? 'Was direkt zurÃ¼ckging (Schaden, Falsch).' : 'What was returned immediately (Damage, Wrong).'}</li>
+                                            <li className="flex items-center gap-2"><Ban size={14}/> <strong>Rejected:</strong> {lang === 'de' ? 'Was direkt zurückging (Schaden, Falsch).' : 'What was returned immediately (Damage, Wrong).'}</li>
                                             <li className="flex items-center gap-2"><CheckCircle2 size={14}/> <strong>Accepted:</strong> {lang === 'de' ? 'Was im Regal landet.' : 'What lands on the shelf.'}</li>
                                         </ul>
                                     </div>
                                     <div className={`flex-1 p-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
                                         <div className="text-2xl font-mono font-bold">Total - Bad = Stock</div>
-                                        <div className="text-xs opacity-50 text-center">{lang === 'de' ? 'Nur das Ergebnis ("Accepted") verÃ¤ndert den Lagerbestand.' : 'Only the result ("Accepted") changes the inventory.'}</div>
+                                        <div className="text-xs opacity-50 text-center">{lang === 'de' ? 'Nur das Ergebnis ("Accepted") verändert den Lagerbestand.' : 'Only the result ("Accepted") changes the inventory.'}</div>
                                     </div>
                                 </div>
                             </DocCard>
 
                             {/* Subsection B: Returns */}
-                            <DocCard title={lang === 'de' ? 'B. RÃ¼cksendungen (Negative Transactions)' : 'B. Returns (Negative Transactions)'} icon={<LogOut size={24}/>}>
+                            <DocCard title={lang === 'de' ? 'B. Rücksendungen (Negative Transactions)' : 'B. Returns (Negative Transactions)'} icon={<LogOut size={24}/>}>
                                 <p className="mb-4">
                                     {lang === 'de' 
-                                        ? 'Wie korrigiert man eine Falschlieferung, die erst spÃ¤ter bemerkt wurde? Durch eine "Negative Transaktion". Wir lÃ¶schen niemals alte Belege ("The Ledger Principle"). Stattdessen fÃ¼gen wir einen Korrektur-Beleg hinzu.'
+                                        ? 'Wie korrigiert man eine Falschlieferung, die erst später bemerkt wurde? Durch eine "Negative Transaktion". Wir löschen niemals alte Belege ("The Ledger Principle"). Stattdessen fügen wir einen Korrektur-Beleg hinzu.'
                                         : 'How to correct a wrong delivery noticed later? Via a "Negative Transaction". We never delete old receipts ("The Ledger Principle"). Instead, we add a correction receipt.'}
                                 </p>
                                 <div className={`p-4 rounded-xl border flex items-center justify-between ${isDark ? 'bg-orange-900/10 border-orange-500/20' : 'bg-orange-50 border-orange-200'}`}>
@@ -371,13 +371,13 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                     <div className="flex items-center gap-4">
                                         <div className={`p-4 rounded-xl border flex-1 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-200'}`}>
                                             <div className="text-xs font-bold uppercase mb-1 opacity-50">Standard Logik</div>
-                                            <div className="text-red-500 font-bold">10 {lang === 'de' ? 'Bestellt' : 'Ordered'} â‰  8 {lang === 'de' ? 'Geliefert' : 'Delivered'}</div>
+                                            <div className="text-red-500 font-bold">10 {lang === 'de' ? 'Bestellt' : 'Ordered'} ≠ 8 {lang === 'de' ? 'Geliefert' : 'Delivered'}</div>
                                             <div className="text-xs mt-1">Status: <span className="text-amber-500 font-bold">TEILLIEFERUNG</span></div>
                                         </div>
                                         <ArrowRight size={24} className="opacity-30" />
                                         <div className={`p-4 rounded-xl border flex-1 border-purple-500/30 bg-purple-500/10`}>
                                             <div className="text-xs font-bold uppercase mb-1 text-purple-500">Force Close Flag</div>
-                                            <div className="text-emerald-500 font-bold">10 {lang === 'de' ? 'Bestellt' : 'Ordered'} â‰ˆ 8 {lang === 'de' ? 'Geliefert' : 'Delivered'}</div>
+                                            <div className="text-emerald-500 font-bold">10 {lang === 'de' ? 'Bestellt' : 'Ordered'} ≈ 8 {lang === 'de' ? 'Geliefert' : 'Delivered'}</div>
                                             <div className="text-xs mt-1">Status: <span className="text-emerald-500 font-bold">ERLEDIGT</span></div>
                                         </div>
                                     </div>
@@ -402,20 +402,20 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                         <div className="space-y-6">
                             
                             {/* 1. Identity Badges */}
-                            <DocCard title={lang === 'de' ? '1. IdentitÃ¤t (Ewig)' : '1. Identity (Eternal)'} icon={<ShieldCheck size={24}/>}>
-                                <p className="mb-4 text-sm opacity-80">{lang === 'de' ? 'Diese Badges definieren den "Charakter" einer Bestellung. Sie Ã¤ndern sich nie.' : 'These badges define the "character" of an order. They never change.'}</p>
+                            <DocCard title={lang === 'de' ? '1. Identität (Ewig)' : '1. Identity (Eternal)'} icon={<ShieldCheck size={24}/>}>
+                                <p className="mb-4 text-sm opacity-80">{lang === 'de' ? 'Diese Badges definieren den "Charakter" einer Bestellung. Sie ändern sich nie.' : 'These badges define the "character" of an order. They never change.'}</p>
                                 <div className="flex gap-4 items-center">
                                     <span className={`px-2.5 py-1 rounded-md text-xs font-bold border flex items-center gap-2 uppercase tracking-wider ${isDark ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
                                         <Box size={12} /> Lager
                                     </span>
-                                    <span className="text-xs opacity-50">&rarr; {lang === 'de' ? 'Standard Wareneingang. ErhÃ¶ht Bestand.' : 'Standard Receipt. Increases stock.'}</span>
+                                    <span className="text-xs opacity-50">&rarr; {lang === 'de' ? 'Standard Wareneingang. Erhöht Bestand.' : 'Standard Receipt. Increases stock.'}</span>
                                 </div>
                                 <div className="h-px bg-slate-500/20 my-3"></div>
                                 <div className="flex gap-4 items-center">
                                     <span className={`px-2.5 py-1 rounded-md text-xs font-bold border flex items-center gap-2 uppercase tracking-wider ${isDark ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-blue-50 text-blue-600 border-blue-200'}`}>
                                         <Briefcase size={12} /> Projekt
                                     </span>
-                                    <span className="text-xs opacity-50">&rarr; {lang === 'de' ? 'Reservierte Ware. Geht nicht in den freien Bestand. Trigger fÃ¼r E-Mail.' : 'Reserved goods. Does not enter free stock. Trigger for email.'}</span>
+                                    <span className="text-xs opacity-50">&rarr; {lang === 'de' ? 'Reservierte Ware. Geht nicht in den freien Bestand. Trigger für E-Mail.' : 'Reserved goods. Does not enter free stock. Trigger for email.'}</span>
                                 </div>
                             </DocCard>
 
@@ -443,7 +443,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                 <p className="mb-4 text-sm opacity-80">{lang === 'de' ? 'Der Status eines spezifischen Lieferscheins.' : 'The status of a specific receipt.'}</p>
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${isDark ? 'bg-[#6264A7]/20 text-[#9ea0e6] border-[#6264A7]/40' : 'bg-[#6264A7]/10 text-[#6264A7] border-[#6264A7]/20'}`}>In PrÃ¼fung</span>
+                                        <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${isDark ? 'bg-[#6264A7]/20 text-[#9ea0e6] border-[#6264A7]/40' : 'bg-[#6264A7]/10 text-[#6264A7] border-[#6264A7]/20'}`}>In Prüfung</span>
                                         <span className="text-xs opacity-50 text-right">{lang === 'de' ? 'Ware ist physisch da, aber noch nicht im Bestand gebucht.' : 'Goods physically arrived, but not yet booked to stock.'}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
