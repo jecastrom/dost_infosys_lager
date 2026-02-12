@@ -9,182 +9,10 @@ import {
   AlertTriangle, Layers, XCircle, ClipboardCheck,
   Undo2, MessageSquare, AlertOctagon, Box, Lock, LogOut
 } from 'lucide-react';
-import { ReceiptHeader, ReceiptItem, Theme, ReceiptComment, Ticket, PurchaseOrder, ReceiptMaster, DeliveryLog, ActiveModule } from '../types';
+import { ReceiptHeader, ReceiptItem, Theme, ReceiptComment, Ticket, PurchaseOrder, ReceiptMaster, DeliveryLog, ActiveModule, StockItem } from '../types';
 import { TicketSystem } from './TicketSystem';
-
-// --- INTERNAL COMPONENT: STATUS BADGES (SINGLE SOURCE OF TRUTH) ---
-const ReceiptStatusBadges = ({ 
-    header, 
-    master, 
-    linkedPO, 
-    tickets, 
-    theme 
-}: { 
-    header: ReceiptHeader, 
-    master?: ReceiptMaster, 
-    linkedPO?: PurchaseOrder, 
-    tickets: Ticket[], 
-    theme: Theme 
-}) => {
-    const isDark = theme === 'dark';
-    const badges: React.ReactNode[] = [];
-    
-    // Determine effective status: Master takes precedence over Header (for grouped rows)
-    let rawStatus = (master && master.status) ? master.status : header.status;
-
-    // CRITICAL FIX: Default to 'Gebucht' if status is missing, empty, or a dash.
-    // If a receipt exists here, it is booked by definition unless flagged otherwise.
-    if (!rawStatus || String(rawStatus).trim() === '' || String(rawStatus).trim() === '-') {
-        rawStatus = 'Gebucht';
-    }
-
-    const effectiveStatus = String(rawStatus).trim();
-    
-    // Normalize for robust comparison (Case Insensitive)
-    const statusLower = effectiveStatus.toLowerCase();
-
-    // --- BADGE 1: IDENTITY (SOURCE) ---
-    // Rule: IF linkedPO?.status === 'Projekt' -> [PROJEKT]
-    //       ELSE -> [LAGER]
-    const isProject = linkedPO?.status === 'Projekt' || (header.bestellNr && header.bestellNr.toLowerCase().includes('projekt'));
-
-    if (isProject) {
-        badges.push(
-            <span key="id-projekt" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border flex items-center gap-1 uppercase tracking-wider ${isDark ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-blue-50 text-blue-600 border-blue-200'}`}>
-                <Briefcase size={10} /> Projekt
-            </span>
-        );
-    } else {
-        badges.push(
-            <span key="id-lager" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border flex items-center gap-1 uppercase tracking-wider ${isDark ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                <Box size={10} /> Lager
-            </span>
-        );
-    }
-
-    // --- BADGE 2: THE STATUS (MANDATORY) ---
-    // Maps the 'effectiveStatus' string to a colored badge.
-    
-    if (statusLower === 'gebucht' || statusLower === 'abgeschlossen' || statusLower === 'in bearbeitung') {
-        // Handle 'Gebucht' (Standard), 'Abgeschlossen' (Legacy), and 'In Bearbeitung' (Default) as Green Booked Badge
-        badges.push(
-            <span key="st-booked" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>
-                Gebucht
-            </span>
-        );
-    } else if (statusLower === 'in prüfung' || statusLower === 'wartet auf prüfung' || header.lieferscheinNr === 'Ausstehend') {
-        badges.push(
-            <span key="st-check" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider whitespace-nowrap ${isDark ? 'bg-[#6264A7]/20 text-[#9ea0e6] border-[#6264A7]/40' : 'bg-[#6264A7]/10 text-[#6264A7] border-[#6264A7]/20'}`}>
-                In Prüfung
-            </span>
-        );
-    } else if (statusLower === 'schaden' || statusLower === 'beschädigt' || statusLower.includes('schaden')) {
-        badges.push(
-            <span key="st-damage" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${isDark ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-red-50 text-red-600 border-red-200'}`}>
-                Schaden
-            </span>
-        );
-    } else if (statusLower === 'abgelehnt') {
-        badges.push(
-            <span key="st-rejected" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${isDark ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-red-50 text-red-600 border-red-200'}`}>
-                Abgelehnt
-            </span>
-        );
-    } else if (statusLower === 'teillieferung' || statusLower.includes('teil')) {
-        badges.push(
-            <span key="st-partial" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>
-                Teillieferung
-            </span>
-        );
-    } else if (statusLower === 'übermenge' || statusLower === 'zu viel') {
-        badges.push(
-            <span key="st-over" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-600 border-orange-200'}`}>
-                Übermenge
-            </span>
-        );
-    } else if (statusLower === 'falsch geliefert') {
-        badges.push(
-            <span key="st-wrong" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>
-                Falsch
-            </span>
-        );
-    } else {
-        // CATCH-ALL DEFAULT:
-        // If status doesn't match any known case, display it as a generic gray badge.
-        // This ensures NO status is ever invisible.
-        if (effectiveStatus && effectiveStatus !== '-' && effectiveStatus !== 'null' && effectiveStatus !== 'undefined') {
-            badges.push(
-                <span key="st-generic" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${isDark ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                    {effectiveStatus}
-                </span>
-            );
-        }
-    }
-
-    // --- BADGE 3: TICKETS (ISSUES) ---
-    const openTickets = tickets.filter(t => t.status === 'Open').length;
-    const closedTickets = tickets.filter(t => t.status === 'Closed').length;
-
-    if (openTickets > 0) {
-        badges.push(
-            <span key="ticket-open" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border flex items-center gap-1 uppercase tracking-wider animate-pulse ${isDark ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-red-50 text-red-600 border-red-200'}`}>
-                <AlertOctagon size={10} /> Reklamation
-            </span>
-        );
-    } else if (closedTickets > 0) {
-        badges.push(
-            <span key="ticket-solved" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border flex items-center gap-1 uppercase tracking-wider ${isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>
-                <CheckCircle2 size={10} /> Fall gelöst
-            </span>
-        );
-    }
-
-    return <div className="flex flex-wrap items-center gap-2">{badges}</div>;
-};
-
-// --- HELPER: INSPECTION STATE LOGIC ---
-const getInspectionState = (header: ReceiptHeader, po?: PurchaseOrder, master?: ReceiptMaster) => {
-    // 1. Pending Check (Resume Inspection) - HIGHEST PRIORITY
-    if (header.status === 'In Prüfung' || header.status === 'Wartet auf Prüfung' || header.lieferscheinNr === 'Ausstehend') {
-        return { canInspect: true, label: 'Prüfung fortsetzen', style: 'primary' };
-    }
-
-    // 2. Next Delivery Check (Start NEW Receipt)
-    if (po) {
-        // A. Hard Blockers (Stop Logic)
-        if (po.isForceClosed) return { canInspect: false, label: '', style: '' };
-        if (po.status === 'Abgeschlossen') return { canInspect: false, label: '', style: '' };
-        if (po.status === 'Storniert') return { canInspect: false, label: '', style: '' };
-
-        // B. Math Check (Quantity)
-        const totalOrdered = po.items.reduce((sum, i) => sum + i.quantityExpected, 0);
-        let totalReceived = 0;
-        
-        if (master) {
-             // Use Receipt Master (DB Truth)
-             master.deliveries.forEach(d => {
-                 d.items.forEach(i => {
-                     // IMPORTANT: We count only quantityAccepted (Good Stock).
-                     // If items were rejected (damaged, wrong), they are NOT counted here, 
-                     // meaning the PO remains "open" for replacement.
-                     if (po.items.some(pi => pi.sku === i.sku)) {
-                         totalReceived += i.quantityAccepted; 
-                     }
-                 });
-             });
-        } else {
-             // Fallback for legacy POs
-             totalReceived = po.items.reduce((sum, i) => sum + i.quantityReceived, 0);
-        }
-        
-        // Only allow "Next Delivery" if there is pending quantity (Ordered > Accepted)
-        if (totalReceived < totalOrdered) {
-            return { canInspect: true, label: 'Ersatz / Nachlieferung', style: 'secondary' };
-        }
-    }
-
-    return { canInspect: false, label: '', style: '' };
-};
+import { ReceiptStatusBadges } from './ReceiptStatusBadges';
+import { StatusDescription } from './StatusDescription';
 
 interface ReceiptManagementProps {
   headers: ReceiptHeader[];
@@ -193,6 +21,7 @@ interface ReceiptManagementProps {
   tickets: Ticket[];
   purchaseOrders: PurchaseOrder[];
   receiptMasters: ReceiptMaster[];
+  stockItems: StockItem[];
   theme: Theme;
   onUpdateStatus: (batchId: string, newStatus: string) => void;
   onAddComment: (batchId: string, type: 'note' | 'email' | 'call', message: string) => void;
@@ -222,6 +51,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   tickets,
   purchaseOrders,
   receiptMasters,
+  stockItems,
   theme,
   onUpdateStatus,
   onAddComment,
@@ -257,6 +87,9 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
 
   // New State: Delivery List Popover
   const [showDeliveryList, setShowDeliveryList] = useState(false);
+
+  // Mobile: Historie & Notizen collapse state
+  const [historieExpanded, setHistorieExpanded] = useState(false);
 
   // Reset dropdown when changing selection
   useEffect(() => {
@@ -361,14 +194,14 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
       // 1. ISSUES (Highest Priority)
       // Matches damage, rejection, wrong delivery, or open tickets
       if (hasOpenTickets) return 'issues';
-      if (['schaden', 'abgelehnt', 'falsch', 'beschädigt'].some(k => s.includes(k))) return 'issues';
+      if (['schaden', 'abgelehnt', 'falsch', 'beschÃ¤digt'].some(k => s.includes(k))) return 'issues';
 
       // 2. COMPLETED
       // Matches Booked, Closed, or "In Bearbeitung" (Legacy Default)
       if (['gebucht', 'abgeschlossen', 'in bearbeitung', 'erledigt'].includes(s)) return 'completed';
 
       // 3. PENDING (Default Workload)
-      // Matches In Prüfung, Partial, Overdelivery, Waiting, or Empty
+      // Matches In PrÃ¼fung, Partial, Overdelivery, Waiting, or Empty
       return 'pending';
   };
 
@@ -499,7 +332,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
       if (!selectedBatchId) return;
       // Revert still uses confirm as it's a destructive action (removing stock).
       // Assuming sandbox issue was specific to 'Force Close' context, but safe to keep for now.
-      if (window.confirm("Möchten Sie die Buchung stornieren? Der Lagerbestand wird entsprechend reduziert.")) {
+      if (window.confirm("MÃ¶chten Sie die Buchung stornieren? Der Lagerbestand wird entsprechend reduziert.")) {
           onRevertReceipt(selectedBatchId);
       }
   };
@@ -626,7 +459,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
         if (received > ordered) {
              return (
                 <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
-                    <Info size={10} /> Überlieferung
+                    <Info size={10} /> Ãœberlieferung
                 </span>
             );
         }
@@ -653,6 +486,10 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
     );
     if (!header) return undefined;
     return items.find(i => i.batchId === header.batchId && i.sku === sku);
+  };
+
+  const findStockItemBySku = (sku: string) => {
+    return stockItems.find(item => item.sku === sku);
   };
 
   const renderItemStatusIconForPO = (
@@ -689,11 +526,49 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
       }
       
       if (isOver) {
-           return (<div className="flex justify-center" title="Überlieferung"><Info size={18} className="text-orange-500" /></div>);
+           return (<div className="flex justify-center" title="Ãœberlieferung"><Info size={18} className="text-orange-500" /></div>);
       }
 
       // Scenario B: Active Short -> Warning
       return (<div className="flex justify-center" title="Mengenabweichung"><AlertTriangle size={18} className="text-amber-500" /></div>);
+  };
+
+  // --- INSPECTION STATE HELPER ---
+  const getInspectionState = (row?: ReceiptListRow | ReceiptHeader, po?: PurchaseOrder, master?: ReceiptMaster) => {
+    if (!row || !po || !master) return { canInspect: false, label: '', style: '' };
+    
+    const isForceClosed = po.isForceClosed || false;
+    const totalReceived = master.deliveries.reduce((sum, delivery) => {
+      return sum + delivery.items.reduce((itemSum, item) => itemSum + item.quantityAccepted, 0);
+    }, 0);
+    const totalOrdered = po.items.reduce((sum, item) => sum + item.quantityExpected, 0);
+    const remainingQty = totalOrdered - totalReceived;
+    
+    // Can't inspect if force closed
+    if (isForceClosed) {
+      return { canInspect: false, label: '', style: '' };
+    }
+    
+    // Can inspect if there's remaining quantity
+    if (remainingQty > 0) {
+      return {
+        canInspect: true,
+        label: 'Lieferung prüfen',
+        style: 'primary' // Blue primary button
+      };
+    }
+    
+    // Overage scenario - can still inspect to document it
+    if (remainingQty < 0) {
+      return {
+        canInspect: true,
+        label: 'Übermenge prüfen',
+        style: 'warning' // Warning style
+      };
+    }
+    
+    // Fully received, no inspection needed
+    return { canInspect: false, label: '', style: '' };
   };
 
   // --- ACTIONS RENDERER (Shared for both layouts) ---
@@ -711,12 +586,12 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                 title={inspectionState.label}
             >
                 <ClipboardCheck size={16} />
-                <span className="hidden sm:inline text-xs font-bold">{inspectionState.label === 'Prüfung fortsetzen' ? 'Prüfen' : 'Ersatz / Nachlieferung'}</span>
+                <span className="hidden sm:inline text-xs font-bold">{inspectionState.label === 'PrÃ¼fung fortsetzen' ? 'PrÃ¼fen' : 'Ersatz / Nachlieferung'}</span>
             </button>
         )}
 
         {/* RETURN BUTTON (For ANY Issue or Overdelivery) */}
-        {selectedHeader && ['Übermenge', 'Zu viel', 'Schaden', 'Beschädigt', 'Falsch geliefert', 'Abgelehnt', 'Sonstiges'].some(s => selectedHeader.status.includes(s)) && po && !po.isForceClosed && (
+        {selectedHeader && ['Ãœbermenge', 'Zu viel', 'Schaden', 'BeschÃ¤digt', 'Falsch geliefert', 'Abgelehnt', 'Sonstiges'].some(s => selectedHeader.status.includes(s)) && po && !po.isForceClosed && (
              <button
                 onClick={(e) => { e.stopPropagation(); onInspect(po, 'return'); }}
                 className={`px-5 py-3 rounded-xl border flex items-center gap-2.5 font-bold text-sm transition-all shadow-sm ${
@@ -724,10 +599,10 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                     ? 'bg-orange-500/20 text-orange-400 border-orange-500/50 hover:bg-orange-500/30' 
                     : 'bg-orange-600 text-white border-orange-600 hover:bg-orange-700'
                 }`}
-                title="Rücksendung erfassen (Korrektur)"
+                title="RÃ¼cksendung erfassen (Korrektur)"
             >
                 <LogOut size={14} /> 
-                <span className="hidden sm:inline">Rücksendung</span>
+                <span className="hidden sm:inline">RÃ¼cksendung</span>
             </button>
         )}
 
@@ -741,7 +616,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                     ? 'border-slate-700 text-slate-400 hover:border-red-500 hover:text-red-400 hover:bg-red-500/10' 
                     : 'border-slate-300 text-slate-500 hover:border-red-500 hover:text-red-600 hover:bg-red-50'
                 }`}
-                title="Abschließen"
+                title="AbschlieÃŸen"
             >
                 <Archive size={16} />
             </button>
@@ -762,7 +637,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                  : 'bg-[#0077B5] hover:bg-[#00A0DC] text-white shadow-blue-500/20'
             }`}
           >
-            <ClipboardCheck size={20} /> Lieferung prüfen
+            <ClipboardCheck size={20} /> Lieferung prÃ¼fen
           </button>
         </div>
 
@@ -836,7 +711,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                   <h3 className="text-xs font-bold uppercase text-slate-500 tracking-wider">Erweiterte Suche</h3>
                   {(dateFrom || dateTo || filterUser) && (
                     <button onClick={clearFilters} className="text-xs text-[#0077B5] font-bold hover:underline flex items-center gap-1">
-                       Filter zurücksetzen <X size={12}/>
+                       Filter zurÃ¼cksetzen <X size={12}/>
                     </button>
                   )}
               </div>
@@ -873,7 +748,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
              {filteredRows.length === 0 ? (
                <div className="p-8 text-center text-slate-500">
                  <Package size={32} className="mx-auto mb-3 opacity-30" />
-                 <p>Keine Einträge gefunden</p>
+                 <p>Keine EintrÃ¤ge gefunden</p>
                </div>
              ) : (
                filteredRows.map(row => {
@@ -898,7 +773,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                          {row.isGroup ? (
                            <div className="flex items-center gap-2"><Layers size={14} className="text-[#0077B5]" /><span className="font-bold">{row.bestellNr}</span></div>
                          ) : (
-                           <span className="font-mono font-bold">{row.bestellNr || '–'}</span>
+                           <span className="font-mono font-bold">{row.bestellNr || 'â€“'}</span>
                          )}
                        </div>
                        <div className="flex items-center justify-between">
@@ -918,12 +793,12 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                        </div>
                        {linkedPO?.pdfUrl && (
                          <div className="flex items-center justify-between">
-                           <span className="text-xs font-bold uppercase text-slate-500">Bestätigung</span>
+                           <span className="text-xs font-bold uppercase text-slate-500">BestÃ¤tigung</span>
                            <CheckCircle2 size={16} className="text-emerald-500" />
                          </div>
                        )}
                      </div>
-                     {(inspectionState?.canInspect || (row.status && ['Übermenge', 'Zu viel', 'Schaden', 'Beschädigt', 'Falsch geliefert', 'Abgelehnt', 'Sonstiges'].some(s => row.status.includes(s)))) && (
+                     {(inspectionState?.canInspect || (row.status && ['Ãœbermenge', 'Zu viel', 'Schaden', 'BeschÃ¤digt', 'Falsch geliefert', 'Abgelehnt', 'Sonstiges'].some(s => row.status.includes(s)))) && (
                        <div className="flex items-center gap-2 pt-3 border-t border-slate-200 dark:border-slate-700" onClick={(e) => e.stopPropagation()}>
                          {renderActions(inspectionState, linkedPO)}
                        </div>
@@ -942,7 +817,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                  <tr>
                    <th className="p-4 font-semibold">Status</th>
                    <th className="p-4 font-semibold">Bestell Nr.</th>
-                   <th className="p-4 font-semibold text-center">Bestellbestätigung</th>
+                   <th className="p-4 font-semibold text-center">BestellbestÃ¤tigung</th>
                    <th className="p-4 font-semibold">Lieferschein</th>
                    <th className="p-4 font-semibold">Lieferant</th>
                    <th className="p-4 font-semibold">Aktualisiert am / von</th>
@@ -981,16 +856,16 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                                   <span className="font-bold">{row.bestellNr}</span>
                               </div>
                           ) : (
-                              row.bestellNr || '–'
+                              row.bestellNr || 'â€“'
                           )}
                       </td>
                       <td className="p-4 text-center">
                         {linkedPO?.pdfUrl ? (
-                           <div className="flex justify-center" title="Bestätigung vorhanden">
+                           <div className="flex justify-center" title="BestÃ¤tigung vorhanden">
                              <CheckCircle2 size={18} className="text-emerald-500" />
                            </div>
                         ) : (
-                           <div className="flex justify-center opacity-30" title="Keine Bestätigung">
+                           <div className="flex justify-center opacity-30" title="Keine BestÃ¤tigung">
                              <Ban size={18} className="text-slate-500" />
                            </div>
                         )}
@@ -1021,7 +896,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                   )})}
                   {filteredRows.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="p-12 text-center text-slate-500">Keine Datensätze gefunden.</td>
+                      <td colSpan={8} className="p-12 text-center text-slate-500">Keine DatensÃ¤tze gefunden.</td>
                     </tr>
                   )}
                </tbody>
@@ -1104,9 +979,9 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
           <button 
             onClick={handleBack} 
             className={`ml-auto flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${isDark ? 'text-slate-400 hover:bg-slate-800 hover:text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'}`}
-            title="Zurück zur Übersicht"
+            title="ZurÃ¼ck zur Ãœbersicht"
           >
-              <span className="hidden md:inline">Schließen</span>
+              <span className="hidden md:inline">SchlieÃŸen</span>
               <X size={18} />
           </button>
       </div>
@@ -1130,7 +1005,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                             <div className="flex items-center gap-2">
                                 <span className={`text-[10px] uppercase font-bold tracking-wider ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Bestellung:</span>
                                 <span className={`text-base font-bold font-mono ${selectedHeader.bestellNr ? (isDark ? 'text-white' : 'text-slate-900') : 'opacity-50 italic font-normal'}`}>
-                                    {selectedHeader.bestellNr || '–'}
+                                    {selectedHeader.bestellNr || 'â€“'}
                                 </span>
                             </div>
 
@@ -1187,7 +1062,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                                                             {del.lieferscheinNr}
                                                         </div>
                                                         <div className="text-[10px] opacity-60">
-                                                            {new Date(del.date).toLocaleDateString()} • {del.items.length} Pos.
+                                                            {new Date(del.date).toLocaleDateString()} â€¢ {del.items.length} Pos.
                                                         </div>
                                                     </div>
                                                 </button>
@@ -1222,10 +1097,10 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                     {/* Bottom Row: Metadata */}
                     <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-xs mt-2 pt-2 border-t ${isDark ? 'border-slate-800 text-slate-400' : 'border-slate-100 text-slate-500'}`}>
                         <span className="font-medium flex items-center gap-1.5"><Truck size={12} className="text-[#0077B5]" /> {selectedHeader.lieferant}</span>
-                        <span className="hidden sm:inline opacity-30">•</span>
+                        <span className="hidden sm:inline opacity-30">â€¢</span>
                         <span className="flex items-center gap-1"><Calendar size={12}/> {new Date(selectedHeader.timestamp).toLocaleDateString()}</span>
                         <span className="flex items-center gap-1"><MapPin size={12}/> {selectedHeader.warehouseLocation}</span>
-                        <span className="flex items-center gap-1 ml-auto"><User size={12}/> {selectedHeader.createdByName || '–'}</span>
+                        <span className="flex items-center gap-1 ml-auto"><User size={12}/> {selectedHeader.createdByName || 'â€“'}</span>
                     </div>
                 </div>
 
@@ -1234,31 +1109,13 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                     {/* PANE B: ITEM LIST & HISTORY (LEFT MAIN) */}
                     <div className="flex-[2] flex flex-col gap-6">
                         
-                        {canReceiveMore && (
-                            <div className={`p-4 rounded-xl border flex items-center justify-between shadow-sm animate-in slide-in-from-top-2 ${
-                                isDark ? 'bg-[#6264A7]/10 border-[#6264A7]/20' : 'bg-[#6264A7]/5 border-[#6264A7]/20'
-                            }`}>
-                                <div className="flex items-center gap-4">
-                                    <div className={`p-2 rounded-full ${isDark ? 'bg-[#6264A7]/20 text-[#9ea0e6]' : 'bg-[#6264A7]/10 text-[#6264A7]'}`}>
-                                        <Truck size={24} />
-                                    </div>
-                                    <div>
-                                        <h4 className={`font-bold ${isDark ? 'text-[#9ea0e6]' : 'text-[#6264A7]'}`}>
-                                            Bestellung noch offen
-                                        </h4>
-                                        <p className={`text-sm ${isDark ? 'text-[#9ea0e6]/70' : 'text-[#6264A7]/70'}`}>
-                                            Es wurden noch nicht alle Artikel geliefert.
-                                        </p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => linkedPO && onReceiveGoods(linkedPO.id)}
-                                    className="px-4 py-2 bg-[#0077B5] hover:bg-[#00A0DC] text-white rounded-lg font-bold shadow-md transition-all flex items-center gap-2"
-                                >
-                                    <PackagePlus size={18} />
-                                    <span className="hidden sm:inline">Weitere Lieferung erfassen</span>
-                                </button>
-                            </div>
+                        {linkedMaster && (
+                            <StatusDescription
+                                status={linkedMaster.status}
+                                theme={theme}
+                                onAction={linkedPO ? () => onReceiveGoods(linkedPO.id) : undefined}
+                                showActionButton={canReceiveMore}
+                            />
                         )}
 
                         {linkedPO && linkedMaster ? (
@@ -1270,7 +1127,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                                     <div className={`p-4 border-b font-bold flex items-center gap-2 ${
                                         isDark ? 'bg-[#1f2937] border-slate-700 text-slate-200' : 'bg-slate-50 border-slate-300 text-slate-700'
                                     }`}>
-                                        <BarChart3 size={18} className="text-[#0077B5]" /> Bestell-Status (Gesamtübersicht)
+                                        <BarChart3 size={18} className="text-[#0077B5]" /> Bestell-Status (GesamtÃ¼bersicht)
                                     </div>
                                     {/* VERTICAL CARD LAYOUT - NO HORIZONTAL SCROLL */}
                                     <div className="divide-y divide-slate-500/10">
@@ -1282,6 +1139,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                                             const hasIssues = linkedMaster.deliveries.some(d => d.items.some(di => di.sku === poItem.sku && di.damageFlag));
                                             const isProject = linkedPO.status === 'Projekt';
                                             const isMasterClosed = linkedMaster?.status === 'Gebucht' || linkedMaster?.status === 'Abgeschlossen';
+                                            const stockItem = findStockItemBySku(poItem.sku);
                                             
                                             return (
                                                 <div key={poItem.sku} className="p-4 space-y-2">
@@ -1289,6 +1147,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                                                         <div className="flex-1 min-w-0">
                                                             <div className="font-bold text-sm truncate">{poItem.name}</div>
                                                             <div className="text-[10px] font-mono opacity-50">{poItem.sku}</div>
+                                                            {stockItem?.system && <div className="text-[10px] opacity-40 mt-0.5">System: {stockItem.system}</div>}
                                                         </div>
                                                         {renderItemStatusIconForPO(ordered, received, hasIssues, linkedPO.isForceClosed, isProject, isMasterClosed)}
                                                     </div>
@@ -1329,7 +1188,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                                     <div className="space-y-4">
                                         {visibleDeliveries.length === 0 ? (
                                             <div className="p-8 text-center text-slate-500 border border-dashed rounded-xl">
-                                                Noch keine physischen Wareneingänge verbucht.
+                                                Noch keine physischen WareneingÃ¤nge verbucht.
                                             </div>
                                         ) : (
                                             visibleDeliveries.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((delivery, index) => {
@@ -1369,7 +1228,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                                                                         </div>
                                                                         {linkedPO && (
                                                                             <div className="flex items-center gap-2">
-                                                                                <FileText size={12} /> Verknüpfte Bestellung: {linkedPO.id}
+                                                                                <FileText size={12} /> VerknÃ¼pfte Bestellung: {linkedPO.id}
                                                                             </div>
                                                                         )}
                                                                     </div>
@@ -1404,12 +1263,14 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                                                                             over = Math.max(0, totalReceived - ordered);
                                                                         }
                                                                         const fullItem = findReceiptItemForLog(delivery, dItem.sku);
+                                                                        const stockItem = findStockItemBySku(dItem.sku);
                                                                         return (
                                                                             <div key={dItem.sku} className={`rounded-lg border p-3 space-y-2 ${isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-white border-slate-200'}`}>
                                                                                 <div className="flex items-center justify-between gap-2">
                                                                                     <div className="flex-1 min-w-0">
                                                                                         <div className="font-bold text-sm truncate">{itemName}</div>
                                                                                         <div className="text-[10px] font-mono opacity-50">{dItem.sku}</div>
+                                                                                        {stockItem?.system && <div className="text-[10px] opacity-40 mt-0.5">System: {stockItem.system}</div>}
                                                                                         {dItem.manualAddFlag && (
                                                                                             <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold border mt-1 ${isDark ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>
                                                                                                 <AlertTriangle size={8} /> Manuell
@@ -1428,8 +1289,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                                                                                 </div>
                                                                                 {(dItem.returnCarrier || dItem.returnTrackingId) && (
                                                                                     <div className={`text-[11px] pl-2 border-l-2 ${isDark ? 'border-slate-600 text-slate-400' : 'border-slate-300 text-slate-500'}`}>
-                                                                                        Rücksendung: {dItem.returnCarrier || '–'} – Tracking: {dItem.returnTrackingId || '–'}
-                                                                                        {dItem.rejectionReason && <span> – Grund: {dItem.rejectionReason}</span>}
+                                                                                        RÃ¼cksendung: {dItem.returnCarrier || 'â€“'} â€“ Tracking: {dItem.returnTrackingId || 'â€“'}
+                                                                                        {dItem.rejectionReason && <span> â€“ Grund: {dItem.rejectionReason}</span>}
                                                                                     </div>
                                                                                 )}
                                                                             </div>
@@ -1483,14 +1344,18 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                     </div>
 
                     {/* PANE C: TRACEABILITY TIMELINE (RIGHT SIDE) */}
-                    <div className={`flex-1 rounded-2xl border flex flex-col overflow-hidden min-h-[400px] ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-                        <div className={`p-4 border-b font-bold flex items-center gap-2 ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className={`flex-1 rounded-2xl border flex flex-col overflow-hidden ${historieExpanded ? 'min-h-[400px]' : 'lg:min-h-[400px]'} ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+                        <button
+                            onClick={() => setHistorieExpanded(!historieExpanded)}
+                            className={`p-4 border-b font-bold flex items-center gap-2 lg:cursor-default ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'} lg:pointer-events-none`}
+                        >
                             <Clock size={18} className="text-slate-500" /> Historie & Notizen
-                        </div>
+                            <ChevronDown size={18} className={`ml-auto lg:hidden transition-transform ${historieExpanded ? 'rotate-180' : ''}`} />
+                        </button>
                         
-                        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                        <div className={`flex-1 overflow-y-auto p-4 space-y-6 ${historieExpanded ? 'block' : 'hidden lg:block'}`}>
                             {relatedComments.length === 0 ? (
-                            <div className="text-center py-10 text-slate-500 text-sm italic">Keine Einträge vorhanden.</div>
+                            <div className="text-center py-10 text-slate-500 text-sm italic">Keine EintrÃ¤ge vorhanden.</div>
                             ) : (
                             relatedComments.map(c => (
                                 <div key={c.id} className="relative pl-6 border-l border-slate-500/20 last:border-0 pb-2">
@@ -1515,7 +1380,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                             )}
                         </div>
 
-                        <div className={`p-4 border-t ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                        <div className={`p-4 border-t ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'} ${historieExpanded ? 'block' : 'hidden lg:block'}`}>
                             <div className="flex gap-2 mb-2">
                                 <TypeButton active={commentType === 'note'} icon={<StickyNote size={14} />} label="Notiz" onClick={() => setCommentType('note')} isDark={isDark} />
                                 <TypeButton active={commentType === 'email'} icon={<Mail size={14} />} label="Email" onClick={() => setCommentType('email')} isDark={isDark} />
@@ -1544,7 +1409,19 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
 
         {/* TICKETS TAB CONTENT - FULL HEIGHT */}
         {activeTab === 'tickets' && (
-            <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden min-h-0 h-full">
+    <div className="flex-1 flex flex-col overflow-hidden min-h-0 h-full">
+        {/* Status Badges Header */}
+        <div className={`px-4 md:px-6 py-4 border-b ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+            <ReceiptStatusBadges
+                header={selectedHeader}
+                master={linkedMaster}
+                linkedPO={linkedPO}
+                tickets={contextTickets}
+                theme={theme}
+                showTicketBadge={true}
+            />
+        </div>
+        <div className="flex-1 p-4 md:p-6 overflow-hidden min-h-0">
                 <TicketSystem 
                     receiptId={selectedBatchId}
                     tickets={contextTickets} // Use context-aware tickets
@@ -1555,7 +1432,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                     linkedPO={linkedPO || undefined}
                 />
             </div>
-        )}
+    </div>
+)}
 
       </div>
 

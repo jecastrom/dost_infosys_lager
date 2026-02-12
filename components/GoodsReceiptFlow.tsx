@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { 
@@ -16,8 +15,8 @@ import { TicketConfig } from './SettingsPage';
 const LAGERORT_OPTIONS: string[] = [
   "Akku Service","Brandt, Service, B DI 446E","Dallmann, Service","EKZFK","GERAS","HaB","HAB",
   "HaB Altbestand Kunde","HLU","HTW","KEH","Kitas","Koplin, Service, B DI 243","KWF",
-  "Lavrenz, Service","LHW","MPC","Pfefferwerk/WAB","RAS_Zubehör","RBB","RBB_SSP",
-  "Stöwhaas,Service","Tau13","Trittel, Service","ukb","UKB Lager","UKB Service","Wartungsklebchen"
+  "Lavrenz, Service","LHW","MPC","Pfefferwerk/WAB","RAS_ZubehÃ¶r","RBB","RBB_SSP",
+  "StÃ¶whaas,Service","Tau13","Trittel, Service","ukb","UKB Lager","UKB Service","Wartungsklebchen"
 ];
 
 interface CartItem {
@@ -88,7 +87,7 @@ const PlusMinusPicker = ({ value, onChange, min = 0, max = 999, disabled = false
             : 'bg-red-600 hover:bg-red-500 active:bg-red-700'
         }`}
       >
-        −
+        Ã¢Ë†â€™
       </button>
 
       {/* NUMBER - TAPPABLE */}
@@ -291,7 +290,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
           if (total < poItem.quantityExpected) anyUnder = true;
           if (total > poItem.quantityExpected) anyOver = true;
         }
-        if (anyOver) return 'Übermenge';
+        if (anyOver) return 'Ãœbermenge';
         if (anyUnder || currentCart.some(c => c.qtyRejected > 0)) return 'Teillieferung';
         return 'Gebucht';
       }
@@ -357,7 +356,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
           let loc = headerData.warehouseLocation || 'Wareneingang';
           const fi = existingItems.find(i => i.sku === po.items[0]?.sku);
           if (fi?.warehouseLocation) loc = fi.warehouseLocation;
-          setHeaderData(prev => ({ ...prev, lieferscheinNr: `RÜCK-${d}`, warehouseLocation: loc, status: 'Rücklieferung' }));
+          setHeaderData(prev => ({ ...prev, lieferscheinNr: `RÃœCK-${d}`, warehouseLocation: loc, status: 'RÃ¼cklieferung' }));
           setStep(2);
         } else { setStep(1); }
       }
@@ -406,12 +405,12 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
         
         // QUALITY ISSUES: Damaged, Wrong, Rejected
         if (c.qtyRejected > 0) {
-          const r = c.rejectionReason === 'Damaged' ? 'Beschädigt' : c.rejectionReason === 'Wrong' ? 'Falsch' : c.rejectionReason === 'Overdelivery' ? 'Übermenge' : 'Sonstiges';
+          const r = c.rejectionReason === 'Damaged' ? 'BeschÃ¤digt' : c.rejectionReason === 'Wrong' ? 'Falsch' : c.rejectionReason === 'Overdelivery' ? 'Ãœbermenge' : 'Sonstiges';
           
           // Check individual ticket config flags
           if (c.rejectionReason === 'Damaged' && ticketConfig.damage) {
             qualityIssues.push(`${lbl}: ${c.qtyRejected}x Abgelehnt (${r}) - ${c.rejectionNotes || 'Keine Details'}`);
-            qualityTypes.add('Beschädigung');
+            qualityTypes.add('BeschÃ¤digung');
           } else if (c.rejectionReason === 'Wrong' && ticketConfig.wrong) {
             qualityIssues.push(`${lbl}: ${c.qtyRejected}x Abgelehnt (${r}) - ${c.rejectionNotes || 'Keine Details'}`);
             qualityTypes.add('Falschlieferung');
@@ -420,12 +419,12 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
             qualityTypes.add('Abweichung');
           } else if (c.rejectionReason === 'Overdelivery' && ticketConfig.extra) {
             // Overdelivery rejections handled separately
-            overdeliveryIssues.push(`${lbl}: ${c.qtyRejected}x zurückgesendet (Übermenge) - ${c.rejectionNotes || 'Keine Details'}`);
+            overdeliveryIssues.push(`${lbl}: ${c.qtyRejected}x zurÃ¼ckgesendet (Ãœbermenge) - ${c.rejectionNotes || 'Keine Details'}`);
           }
           
           // Add return tracking info if available
           if (c.returnCarrier || c.returnTrackingId) {
-            const trackingDetail = `Rücksendung ${lbl}: ${c.qtyRejected}x – Versandart: ${c.returnCarrier || 'Nicht angegeben'} – Tracking: ${c.returnTrackingId || 'Nicht angegeben'}${c.rejectionNotes ? ` – Grund: ${c.rejectionNotes}` : ''}`;
+            const trackingDetail = `RÃ¼cksendung ${lbl}: ${c.qtyRejected}x Ã¢â‚¬â€œ Versandart: ${c.returnCarrier || 'Nicht angegeben'} Ã¢â‚¬â€œ Tracking: ${c.returnTrackingId || 'Nicht angegeben'}${c.rejectionNotes ? ` Ã¢â‚¬â€œ Grund: ${c.rejectionNotes}` : ''}`;
             returnTrackingInfo.push(trackingDetail);
           }
         }
@@ -450,7 +449,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
           { 
             id: crypto.randomUUID(), 
             author: 'System', 
-            text: `Automatisch erstellter Qualitätsfall:\n\n${qualityIssues.join('\n')}`, 
+            text: `Automatisch erstellter QualitÃ¤tsfall:\n\n${qualityIssues.join('\n')}`, 
             timestamp: Date.now(), 
             type: 'system' 
           }
@@ -461,7 +460,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
           qualityMessages.push({
             id: crypto.randomUUID(),
             author: 'System',
-            text: `Rücksendung erfasst:\n\n${returnTrackingInfo.join('\n')}`,
+            text: `RÃ¼cksendung erfasst:\n\n${returnTrackingInfo.join('\n')}`,
             timestamp: Date.now() + 1,
             type: 'system'
           });
@@ -470,7 +469,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
         onAddTicket({ 
           id: crypto.randomUUID(), 
           receiptId: batchId, 
-          subject: `Qualitätsproblem: ${Array.from(qualityTypes).join(', ')} – ${linkedPoId || headerData.lieferscheinNr}`, 
+          subject: `QualitÃ¤tsproblem: ${Array.from(qualityTypes).join(', ')} Ã¢â‚¬â€œ ${linkedPoId || headerData.lieferscheinNr}`, 
           status: 'Open', 
           priority: 'High',
           messages: qualityMessages
@@ -483,14 +482,14 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
         onAddTicket({
           id: crypto.randomUUID(),
           receiptId: batchId,
-          subject: `Teillieferung – ${linkedPoId || headerData.lieferscheinNr} – Offen: ${totalOffen} Stück`,
+          subject: `Teillieferung Ã¢â‚¬â€œ ${linkedPoId || headerData.lieferscheinNr} Ã¢â‚¬â€œ Offen: ${totalOffen} StÃ¼ck`,
           status: 'Open',
           priority: 'Normal',
           messages: [
             {
               id: crypto.randomUUID(),
               author: 'System',
-              text: `Automatisch erstellter Fall (Teillieferung):\n\n${partialDeliveryIssues.join('\n')}\n\nGesamt offen: ${totalOffen} Stück`,
+              text: `Automatisch erstellter Fall (Teillieferung):\n\n${partialDeliveryIssues.join('\n')}\n\nGesamt offen: ${totalOffen} StÃ¼ck`,
               timestamp: Date.now(),
               type: 'system'
             }
@@ -509,19 +508,19 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
           {
             id: crypto.randomUUID(),
             author: 'System',
-            text: `Automatisch erstellter Fall (Übermenge):\n\n${overdeliveryIssues.join('\n')}\n\nGesamt zu viel: ${totalZuViel} Stück`,
+            text: `Automatisch erstellter Fall (Ãœbermenge):\n\n${overdeliveryIssues.join('\n')}\n\nGesamt zu viel: ${totalZuViel} StÃ¼ck`,
             timestamp: Date.now(),
             type: 'system'
           }
         ];
         
         // Add return tracking for overdelivery if available
-        const overdeliveryReturns = returnTrackingInfo.filter(info => info.includes('Übermenge'));
+        const overdeliveryReturns = returnTrackingInfo.filter(info => info.includes('Ãœbermenge'));
         if (overdeliveryReturns.length > 0) {
           overMessages.push({
             id: crypto.randomUUID(),
             author: 'System',
-            text: `Rücksendung erfasst:\n\n${overdeliveryReturns.join('\n')}`,
+            text: `RÃ¼cksendung erfasst:\n\n${overdeliveryReturns.join('\n')}`,
             timestamp: Date.now() + 1,
             type: 'system'
           });
@@ -530,7 +529,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
         onAddTicket({
           id: crypto.randomUUID(),
           receiptId: batchId,
-          subject: `Übermenge – ${linkedPoId || headerData.lieferscheinNr} – Zu viel: ${totalZuViel} Stück`,
+          subject: `Ãœbermenge Ã¢â‚¬â€œ ${linkedPoId || headerData.lieferscheinNr} Ã¢â‚¬â€œ Zu viel: ${totalZuViel} StÃ¼ck`,
           status: 'Open',
           priority: 'Normal',
           messages: overMessages
@@ -567,7 +566,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
             <h3 className="text-2xl font-bold mb-2">Erfolgreich gebucht!</h3>
             <p className="text-slate-600 dark:text-slate-400 mb-6">Wareneingang wurde erfasst.</p>
             <button onClick={() => { setSubmissionStatus('idle'); handleFinalize(); onClose(); }} className="w-full px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-500 transition-colors">
-              Schließen
+              SchlieÃŸen
             </button>
           </div>
         </div>, document.body
@@ -580,7 +579,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
           <div className={`relative w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4 ${isDark ? 'bg-slate-900 border border-slate-700' : 'bg-white'}`}>
             <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-700">
               <RotateCcw size={24} className="text-orange-500"/>
-              <h3 className="text-lg font-bold">Rücksendung erfassen</h3>
+              <h3 className="text-lg font-bold">RÃ¼cksendung erfassen</h3>
             </div>
             <div>
               <label className="text-xs font-bold uppercase mb-2 block opacity-60">Menge</label>
@@ -588,7 +587,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
             </div>
             <div>
               <label className="text-xs font-bold uppercase mb-2 block opacity-60">Grund</label>
-              <input value={returnPopup.reason} onChange={e => setReturnPopup(p => p ? {...p, reason: e.target.value} : null)} placeholder="z.B. Überzahl, beschädigt..." className={inputClass} />
+              <input value={returnPopup.reason} onChange={e => setReturnPopup(p => p ? {...p, reason: e.target.value} : null)} placeholder="z.B. Ãœberzahl, beschÃ¤digt..." className={inputClass} />
             </div>
             <div>
               <label className="text-xs font-bold uppercase mb-2 block opacity-60">Versandart</label>
@@ -600,7 +599,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
             </div>
             <div className="flex gap-3 pt-2">
               <button onClick={() => setReturnPopup(null)} className="flex-1 px-4 py-3 rounded-xl font-bold bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">Abbrechen</button>
-              <button onClick={handleReturnSubmit} className="flex-1 px-4 py-3 rounded-xl font-bold bg-orange-600 text-white hover:bg-orange-500">Bestätigen</button>
+              <button onClick={handleReturnSubmit} className="flex-1 px-4 py-3 rounded-xl font-bold bg-orange-600 text-white hover:bg-orange-500">BestÃ¤tigen</button>
             </div>
           </div>
         </div>, document.body
@@ -632,7 +631,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
         <div className="flex justify-between mt-2 text-[10px] uppercase font-bold tracking-wider opacity-60">
           <span>Kopfdaten</span>
           <span>Inspektion</span>
-          <span>Prüfung</span>
+          <span>PrÃ¼fung</span>
         </div>
       </div>
 
@@ -663,14 +662,14 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
             <div>
               <label className={`${labelClass} mb-2 block`}>Lagerort</label>
               <select value={headerData.warehouseLocation} onChange={e => setHeaderData(prev => ({...prev, warehouseLocation: e.target.value}))} className={inputClass}>
-                <option value="">Wählen...</option>
+                <option value="">WÃ¤hlen...</option>
                 {LAGERORT_OPTIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
               </select>
             </div>
 
             <div className={`p-4 rounded-xl border ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
               <div className="flex items-center justify-between mb-3">
-                <span className="font-bold text-sm">Bestellung verknüpfen (optional)</span>
+                <span className="font-bold text-sm">Bestellung verknÃ¼pfen (optional)</span>
                 {linkedPoId && (
                   <button onClick={() => { setLinkedPoId(null); setHeaderData(prev => ({ ...prev, bestellNr: '', lieferant: '' })); setCart([]); }} className="text-xs font-bold text-red-500 hover:underline flex items-center gap-1">
                     <X size={14}/> Trennen
@@ -687,7 +686,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                 </div>
               ) : (
                 <button onClick={() => setShowPoModal(true)} className="w-full px-4 py-3 rounded-xl font-bold border-2 border-dashed transition-all hover:border-[#0077B5] hover:bg-[#0077B5]/5 dark:border-slate-700 dark:hover:border-blue-500 dark:hover:bg-blue-500/10">
-                  <Plus size={20} className="inline mr-2"/> Bestellung auswählen
+                  <Plus size={20} className="inline mr-2"/> Bestellung auswÃ¤hlen
                 </button>
               )}
             </div>
@@ -696,8 +695,8 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
               <div className={`p-4 rounded-xl border flex items-center gap-4 text-left cursor-pointer transition-colors ${isAdminClose ? (isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200') : (isDark ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300')}`} onClick={() => handleAdminCloseToggle(!isAdminClose)}>
                 <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isAdminClose ? 'bg-purple-600 border-purple-600 text-white' : 'border-slate-400'}`}>{isAdminClose && <Check size={14} strokeWidth={3} />}</div>
                 <div className="flex-1">
-                  <div className={`font-bold text-sm ${isAdminClose ? 'text-purple-600 dark:text-purple-400' : ''}`}>Admin-Modus: Bestellung ohne Lieferung schließen</div>
-                  <div className="text-xs opacity-60">Liefermenge auf 0 setzen, dann manuell abschließen.</div>
+                  <div className={`font-bold text-sm ${isAdminClose ? 'text-purple-600 dark:text-purple-400' : ''}`}>Admin-Modus: Bestellung ohne Lieferung schlieÃŸen</div>
+                  <div className="text-xs opacity-60">Liefermenge auf 0 setzen, dann manuell abschlieÃŸen.</div>
                 </div>
               </div>
             )}
@@ -721,7 +720,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                     }
                     setShowSearchDropdown(true);
                   }}
-                  placeholder="Artikel hinzufügen..."
+                  placeholder="Artikel hinzufÃ¼gen..."
                   className={`w-full pl-11 ${inputClass}`}
                 />
                 <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -789,13 +788,13 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                         )}
                         {hasReturn && (
                           <div className="flex justify-between items-center">
-                            <span className={`${labelClass} text-red-500`}>Zurückgesendet</span>
-                            <span className="font-mono text-sm font-bold text-red-500">–{line.qtyRejected}</span>
+                            <span className={`${labelClass} text-red-500`}>ZurÃ¼ckgesendet</span>
+                            <span className="font-mono text-sm font-bold text-red-500">Ã¢â‚¬â€œ{line.qtyRejected}</span>
                           </div>
                         )}
                         {hasReturn && (line.returnCarrier || line.returnTrackingId || line.rejectionNotes) && (
                           <div className={`text-[11px] pl-2 border-l-2 ${isDark ? 'border-slate-600 text-slate-400' : 'border-slate-300 text-slate-500'}`}>
-                            Rücksendung: {line.returnCarrier || '–'} – Tracking: {line.returnTrackingId || '–'}{line.rejectionNotes ? ` – Grund: ${line.rejectionNotes}` : ''}
+                            RÃ¼cksendung: {line.returnCarrier || 'Ã¢â‚¬â€œ'} Ã¢â‚¬â€œ Tracking: {line.returnTrackingId || 'Ã¢â‚¬â€œ'}{line.rejectionNotes ? ` Ã¢â‚¬â€œ Grund: ${line.rejectionNotes}` : ''}
                           </div>
                         )}
                         {linkedPoId && c.offen > 0 && (
@@ -816,14 +815,14 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                       {/* Actions */}
                       <div className={`px-4 py-2.5 border-t flex items-center gap-2 ${isDark ? 'border-slate-700 bg-slate-800/80' : 'border-slate-100 bg-slate-50/50'}`}>
                         {showReturnBtn && (
-                          <button onClick={() => setReturnPopup({ idx, qty: c.zuViel || 1, reason: c.zuViel > 0 ? 'Überzahl' : '', carrier: '', tracking: '' })}
+                          <button onClick={() => setReturnPopup({ idx, qty: c.zuViel || 1, reason: c.zuViel > 0 ? 'Ãœberzahl' : '', carrier: '', tracking: '' })}
                             className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${isDark ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30' : 'bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100'}`}>
-                            <RotateCcw size={12}/> Rücksendung
+                            <RotateCcw size={12}/> RÃ¼cksendung
                           </button>
                         )}
                         <button onClick={() => updateCartItem(idx, 'showIssuePanel', !line.showIssuePanel)}
                           className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ml-auto transition-all ${line.showIssuePanel ? (isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700') : (isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600')}`}>
-                          <AlertCircle size={12}/> {line.showIssuePanel ? 'Schließen' : 'Problem'}
+                          <AlertCircle size={12}/> {line.showIssuePanel ? 'SchlieÃŸen' : 'Problem'}
                         </button>
                       </div>
 
@@ -837,10 +836,10 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                             <div>
                               <label className={`${labelClass} mb-1 block`}>Grund</label>
                               <select value={line.rejectionReason} onChange={e => updateCartItem(idx, 'rejectionReason', e.target.value)} className={inputClass}>
-                                <option value="">Wählen...</option>
-                                <option value="Damaged">Beschädigt</option>
+                                <option value="">WÃ¤hlen...</option>
+                                <option value="Damaged">BeschÃ¤digt</option>
                                 <option value="Wrong">Falsch</option>
-                                <option value="Overdelivery">Übermenge</option>
+                                <option value="Overdelivery">Ãœbermenge</option>
                                 <option value="Other">Sonstiges</option>
                               </select>
                             </div>
@@ -884,6 +883,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                               <th className="px-4 py-3 text-center font-bold">Abgelehnt</th>
                               <th className="px-4 py-3 text-center font-bold">Buchung</th>
                               <th className="px-4 py-3 text-center font-bold">Status</th>
+                              <th className="px-4 py-3 text-center font-bold">Aktionen</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-500/10">
@@ -908,7 +908,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                                       />
                                     </div>
                                   </td>
-                                  {linkedPoId && <td className="px-4 py-3 text-center">{calc.offen > 0 ? <span className="font-mono text-sm font-bold text-amber-500 flex items-center justify-center gap-1"><AlertTriangle size={12}/>{calc.offen}</span> : <span className="opacity-30 text-sm">–</span>}</td>}
+                                  {linkedPoId && <td className="px-4 py-3 text-center">{calc.offen > 0 ? <span className="font-mono text-sm font-bold text-amber-500 flex items-center justify-center gap-1"><AlertTriangle size={12}/>{calc.offen}</span> : <span className="opacity-30 text-sm">Ã¢â‚¬â€œ</span>}</td>}
                                   {linkedPoId && <td className="px-4 py-3 text-center"><span className={`font-mono text-sm font-bold ${calc.zuViel > 0 ? 'text-orange-500' : 'opacity-30'}`}>{calc.zuViel > 0 ? `+${calc.zuViel}` : '0'}</span></td>}
                                   <td className="px-4 py-3 text-center">
                                     <input 
@@ -927,12 +927,94 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                                   <td className="px-4 py-3 text-center">
                                     <StatusDot color={forceClose ? 'gray' : color} />
                                   </td>
+                                  <td className="px-4 py-3">
+                                    <div className="flex items-center justify-center gap-2">
+                                      {/* Return Button - Shows when there's overdelivery */}
+                                      {calc.zuViel > 0 && (
+                                        <button 
+                                          onClick={() => setReturnPopup({ idx: cartIdx, qty: calc.zuViel, reason: 'Ãœberzahl', carrier: '', tracking: '' })}
+                                          className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${isDark ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30' : 'bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100'}`}
+                                          title="RÃ¼cksendung erstellen"
+                                        >
+                                          <RotateCcw size={12}/> RÃ¼cksendung
+                                        </button>
+                                      )}
+                                      {/* Problem Button - Always available */}
+                                      <button 
+                                        onClick={() => updateCartItem(cartIdx, 'showIssuePanel', !cartLine.showIssuePanel)}
+                                        className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${cartLine.showIssuePanel ? (isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700') : (isDark ? 'text-slate-400 hover:text-slate-300 hover:bg-slate-800' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100')}`}
+                                        title={cartLine.showIssuePanel ? 'Problem-Panel schlieÃŸen' : 'Problem melden'}
+                                      >
+                                        <AlertCircle size={12}/> {cartLine.showIssuePanel ? 'SchlieÃŸen' : 'Problem'}
+                                      </button>
+                                    </div>
+                                  </td>
                                 </tr>
                               );
                             })}
                           </tbody>
                         </table>
                       </div>
+                      
+                      {/* ISSUE PANELS - Desktop View (Shown Below Table When Active) */}
+                      {cart.map((cartLine, cartIdx) => {
+                        if (!cartLine.showIssuePanel) return null;
+                        return (
+                          <div key={`issue-${cartIdx}`} className={`border-t p-4 space-y-3 ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-amber-50/50 border-amber-200'}`}>
+                            <div className="flex items-center justify-between">
+                              <div className="font-bold text-sm flex items-center gap-2">
+                                <AlertCircle size={16} className="text-amber-500" />
+                                Problem melden: {cartLine.item.name}
+                              </div>
+                              <button 
+                                onClick={() => updateCartItem(cartIdx, 'showIssuePanel', false)}
+                                className={`p-1 rounded hover:bg-slate-500/10 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs font-bold mb-1.5">Grund</label>
+                                <select 
+                                  value={cartLine.rejectionReason || ''}
+                                  onChange={e => updateCartItem(cartIdx, 'rejectionReason', e.target.value)}
+                                  className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-300'}`}
+                                >
+                                  <option value="">Grund wÃ¤hlen...</option>
+                                  <option value="Damaged">BeschÃ¤digt</option>
+                                  <option value="Wrong">Falsch</option>
+                                  <option value="Overdelivery">Ãœbermenge</option>
+                                  <option value="Other">Sonstiges</option>
+                                </select>
+                              </div>
+                              
+                              <div>
+                                <label className="block text-xs font-bold mb-1.5">Betroffene Menge</label>
+                                <input 
+                                  type="number"
+                                  min="0"
+                                  value={cartLine.qtyRejected}
+                                  onChange={e => updateCartItem(cartIdx, 'qtyRejected', parseInt(e.target.value) || 0)}
+                                  className={`w-full px-3 py-2 rounded-lg border text-sm font-mono ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-300'}`}
+                                />
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <label className="block text-xs font-bold mb-1.5">Notizen</label>
+                              <textarea 
+                                value={cartLine.rejectionNotes || ''}
+                                onChange={e => updateCartItem(cartIdx, 'rejectionNotes', e.target.value)}
+                                placeholder="Details zum Problem..."
+                                rows={2}
+                                className={`w-full px-3 py-2 rounded-lg border text-sm resize-none ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-300'}`}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -943,7 +1025,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
               <div className={`p-12 text-center rounded-xl border border-dashed ${isDark ? 'border-slate-700 text-slate-500' : 'border-slate-300 text-slate-400'}`}>
                 <Package size={32} className="mx-auto mb-3 opacity-30" />
                 <p className="font-bold">Keine Positionen</p>
-                <p className="text-sm">Wählen Sie eine Bestellung oder fügen Sie Artikel hinzu.</p>
+                <p className="text-sm">WÃ¤hlen Sie eine Bestellung oder fÃ¼gen Sie Artikel hinzu.</p>
               </div>
             )}
           </div>
@@ -962,14 +1044,14 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
 
             <div className={`grid grid-cols-4 gap-2 p-4 rounded-xl border ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
               <div className="text-center"><div className="text-xl font-bold text-emerald-600">+{Math.max(0, globalStats.totalBuchung)}</div><div className="text-[9px] uppercase font-bold opacity-50">Zugang</div></div>
-              <div className="text-center"><div className="text-xl font-bold text-red-500">{globalStats.totalZurueck > 0 ? `–${globalStats.totalZurueck}` : '0'}</div><div className="text-[9px] uppercase font-bold opacity-50">Zurück</div></div>
+              <div className="text-center"><div className="text-xl font-bold text-red-500">{globalStats.totalZurueck > 0 ? `Ã¢â‚¬â€œ${globalStats.totalZurueck}` : '0'}</div><div className="text-[9px] uppercase font-bold opacity-50">ZurÃ¼ck</div></div>
               <div className="text-center"><div className={`text-xl font-bold ${globalStats.totalOffen > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>{globalStats.totalOffen}</div><div className="text-[9px] uppercase font-bold opacity-50">Offen</div></div>
               <div className="text-center"><div className={`text-xl font-bold ${globalStats.totalZuViel > 0 ? 'text-orange-500' : 'opacity-30'}`}>{globalStats.totalZuViel > 0 ? `+${globalStats.totalZuViel}` : '0'}</div><div className="text-[9px] uppercase font-bold opacity-50">Zu viel</div></div>
             </div>
 
             {cart.some(c => c.qtyRejected > 0) && (
               <div className={`p-4 rounded-xl text-sm ${isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
-                <strong>Hinweis:</strong> {cart.reduce((a,c) => a + c.qtyRejected, 0)} Artikel zurückgesendet. Ticket wird automatisch erstellt.
+                <strong>Hinweis:</strong> {cart.reduce((a,c) => a + c.qtyRejected, 0)} Artikel zurÃ¼ckgesendet. Ticket wird automatisch erstellt.
               </div>
             )}
 
@@ -982,13 +1064,17 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                   return (
                     <div key={i} className="px-4 py-3 flex items-center gap-3">
                       <StatusDot color={sc} />
-                      <div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{line.item.name}</div><div className="text-[10px] opacity-50 font-mono">{line.item.sku}</div></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-sm truncate">{line.item.name}</div>
+                        <div className="text-[10px] opacity-50 font-mono">{line.item.sku}</div>
+                        {line.item.system && <div className="text-[10px] opacity-40 mt-0.5">System: {line.item.system}</div>}
+                      </div>
                       <div className="text-right text-xs space-y-0.5 shrink-0">
                         {linkedPoId && <div className="opacity-50">Bestellt: {lc.bestellt}</div>}
                         <div className="font-bold">Heute: +{lc.heute}</div>
                         {lc.offen > 0 && <div className="text-amber-500 font-bold">Offen: {lc.offen}</div>}
                         {lc.zuViel > 0 && <div className="text-orange-500 font-bold">Zu viel: +{lc.zuViel}</div>}
-                        {line.qtyRejected > 0 && <div className="text-red-500">Zurück: –{line.qtyRejected}</div>}
+                        {line.qtyRejected > 0 && <div className="text-red-500">ZurÃ¼ck: Ã¢â‚¬â€œ{line.qtyRejected}</div>}
                       </div>
                     </div>
                   );
@@ -1000,8 +1086,8 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
               <div className={`p-4 rounded-xl border flex items-center gap-4 text-left cursor-pointer transition-colors ${forceClose ? (isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200') : (isDark ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300')}`} onClick={() => setForceClose(!forceClose)}>
                 <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${forceClose ? 'bg-purple-600 border-purple-600 text-white' : 'border-slate-400'}`}>{forceClose && <Check size={14} strokeWidth={3} />}</div>
                 <div className="flex-1">
-                  <div className={`font-bold text-sm ${forceClose ? 'text-purple-600 dark:text-purple-400' : ''}`}>Manuell schließen (Restmenge stornieren)</div>
-                  <div className="text-xs opacity-60">Setzt Status auf „Abgeschlossen", auch wenn Offen {'>'} 0.</div>
+                  <div className={`font-bold text-sm ${forceClose ? 'text-purple-600 dark:text-purple-400' : ''}`}>Manuell schlieÃŸen (Restmenge stornieren)</div>
+                  <div className="text-xs opacity-60">Setzt Status auf Ã¢â‚¬Å¾Abgeschlossen", auch wenn Offen {'>'} 0.</div>
                 </div>
               </div>
             )}
@@ -1011,7 +1097,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
 
       {/* STICKY FOOTER - PINNED TO BOTTOM */}
       <div className={`sticky bottom-0 z-10 p-4 md:p-5 border-t flex justify-between shrink-0 ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-        {step > 1 ? <button onClick={() => setStep(prev => (prev - 1) as any)} className="px-6 py-3 rounded-xl font-bold bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">Zurück</button> : <div/>}
+        {step > 1 ? <button onClick={() => setStep(prev => (prev - 1) as any)} className="px-6 py-3 rounded-xl font-bold bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">ZurÃ¼ck</button> : <div/>}
         {step < 3 ? (
           <button onClick={() => setStep(prev => (prev + 1) as any)} disabled={step === 1 ? !headerData.lieferscheinNr : cart.length === 0} className="px-8 py-3 bg-[#0077B5] text-white rounded-xl font-bold disabled:opacity-50">Weiter</button>
         ) : (

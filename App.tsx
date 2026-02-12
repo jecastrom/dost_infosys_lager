@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   MOCK_ITEMS, MOCK_RECEIPT_HEADERS, MOCK_RECEIPT_ITEMS, MOCK_COMMENTS, 
@@ -61,7 +60,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
               Etwas ist schiefgelaufen
             </h1>
             <p className="text-slate-600 dark:text-slate-400 mb-6">
-              Die Anwendung ist auf einen unerwarteten Fehler gestoßen. Bitte laden Sie die Seite neu.
+              Die Anwendung ist auf einen unerwarteten Fehler gestoÃŸen. Bitte laden Sie die Seite neu.
             </p>
             {this.state.error && (
               <details className="mb-6 text-left">
@@ -344,7 +343,7 @@ export default function App() {
       bestellNr: po.id,
       lieferdatum: new Date().toISOString().split('T')[0],
       lieferant: po.supplier,
-      status: 'In Prüfung',
+      status: 'In PrÃ¼fung',
       timestamp,
       itemCount: 0,
       warehouseLocation: 'Wareneingang',
@@ -382,7 +381,7 @@ export default function App() {
             return [...prev, {
                 id: `RM-${Date.now()}`,
                 poId,
-                status: 'In Prüfung', 
+                status: 'In Prüfung' as ReceiptMasterStatus, 
                 deliveries: [initialDelivery]
             }];
         }
@@ -483,14 +482,14 @@ export default function App() {
              });
 
              // Apply Logic: Only override if it's not already a critical error status
-             const isErrorStatus = ['Abgelehnt', 'Schaden', 'Schaden + Falsch', 'Falsch geliefert', 'Beschädigt'].includes(finalReceiptStatus);
+             const isErrorStatus = ['Abgelehnt', 'Schaden', 'Schaden + Falsch', 'Falsch geliefert', 'BeschÃ¤digt'].includes(finalReceiptStatus);
              
              if (!isErrorStatus) {
                  if (forceClose) {
                      // FORCE CLOSE: Treat as 'Gebucht' regardless of math
                      finalReceiptStatus = 'Gebucht'; 
                  } else if (totalReceivedIncludingCurrent > totalOrdered) {
-                     finalReceiptStatus = 'Übermenge'; // Fixed form Ãœbermenge
+                     finalReceiptStatus = 'Ãœbermenge'; // Fixed form ÃƒÅ“bermenge
                  } else if (totalReceivedIncludingCurrent < totalOrdered) {
                      // If we received less than total ordered, it is Partial.
                      finalReceiptStatus = 'Teillieferung';
@@ -624,7 +623,7 @@ export default function App() {
         const returnItems = cartItems.filter(c => c.quantityRejected > 0);
         
         const returnMsg = returnItems.map(c => 
-            `Rücksendung: ${c.quantityRejected}x ${c.item.name} (${c.rejectionReason || 'Sonstiges'}). ` +
+            `RÃ¼cksendung: ${c.quantityRejected}x ${c.item.name} (${c.rejectionReason || 'Sonstiges'}). ` +
             (c.returnCarrier ? `Via ${c.returnCarrier} ${c.returnTrackingId ? `(${c.returnTrackingId})` : ''}` : '')
         ).join('\n');
 
@@ -654,7 +653,7 @@ export default function App() {
                      messages: [...ticket.messages, {
                          id: crypto.randomUUID(),
                          author: 'System',
-                         text: `📦 Logistik Update:\n${returnMsg}`,
+                         text: `ðŸ“¦ Logistik Update:\n${returnMsg}`,
                          timestamp: Date.now() + 100, // +100ms to ensure it appears after creation msg
                          type: 'system'
                      }]
@@ -666,10 +665,10 @@ export default function App() {
 
     // --- 6. SIMULATE NOTIFICATION FOR PROJECT COMPLETION ---
     if (isProject && finalReceiptStatus === 'Gebucht') {
-        console.log(`[M365 Mock] Sending email to 'technik-verteiler@dost.de': "Wareneingang für Projekt ${headerData.bestellNr} abgeschlossen. Bereit zur Abholung."`);
+        console.log(`[M365 Mock] Sending email to 'technik-verteiler@dost.de': "Wareneingang fÃ¼r Projekt ${headerData.bestellNr} abgeschlossen. Bereit zur Abholung."`);
         // Visual feedback via setTimeout to allow state to settle or simple alert
         setTimeout(() => {
-            alert("📧 Automatische E-Mail an das Technik-Team gesendet (Abholbereit).");
+            alert("ðŸ“§ Automatische E-Mail an das Technik-Team gesendet (Abholbereit).");
         }, 500);
     }
 
@@ -721,7 +720,7 @@ export default function App() {
           });
       }
 
-      setReceiptHeaders(prev => prev.map(h => h.batchId === batchId ? { ...h, status: 'In Prüfung' } : h));
+      setReceiptHeaders(prev => prev.map(h => h.batchId === batchId ? { ...h, status: 'In PrÃ¼fung' } : h));
       
       if (linkedPO) {
            setPurchaseOrders(prev => prev.map(po => {
@@ -849,6 +848,7 @@ export default function App() {
                     tickets={tickets}
                     purchaseOrders={purchaseOrders}
                     receiptMasters={receiptMasters}
+                    stockItems={inventory}
                     theme={theme}
                     onUpdateStatus={handleReceiptStatusUpdate}
                     onAddComment={handleAddComment}
