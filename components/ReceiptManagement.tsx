@@ -7,8 +7,9 @@ import {
   AlertCircle, CheckCircle2, ChevronDown, ChevronUp, FileText, Truck,
   BarChart3, Ban, Archive, Briefcase, Info, PackagePlus,
   AlertTriangle, Layers, XCircle, ClipboardCheck,
-  Undo2, MessageSquare, AlertOctagon, Box, Lock, LogOut, ChevronsDown
+  Undo2, MessageSquare, AlertOctagon, Box, Lock, LogOut, ChevronsDown, RotateCcw
 } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { ReceiptHeader, ReceiptItem, Theme, ReceiptComment, Ticket, PurchaseOrder, ReceiptMaster, DeliveryLog, ActiveModule, StockItem } from '../types';
 import { TicketSystem } from './TicketSystem';
 import { ReceiptStatusBadges } from './ReceiptStatusBadges';
@@ -31,6 +32,7 @@ interface ReceiptManagementProps {
   onNavigate: (module: ActiveModule) => void;
   onRevertReceipt: (batchId: string) => void;
   onInspect: (po: PurchaseOrder, mode?: 'standard' | 'return') => void;
+  onProcessReturn: (poId: string, data: { quantity: number; reason: string; carrier: string; trackingId: string }) => void;
 }
 
 // Extended Type for Grouped Rows
@@ -60,7 +62,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   onReceiveGoods,
   onNavigate,
   onRevertReceipt,
-  onInspect
+  onInspect,
+  onProcessReturn
 }) => {
   const isDark = theme === 'dark';
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
@@ -92,6 +95,10 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
 
   // Mobile: Historie & Notizen collapse state
   const [historieExpanded, setHistorieExpanded] = useState(false);
+
+  // Return Modal State
+  const [returnModal, setReturnModal] = useState<{ poId: string; quantity: number; reason: string; carrier: string; trackingId: string } | null>(null);
+  const [showGrundOptions, setShowGrundOptions] = useState(false);
 
   // Reset dropdown when changing selection
   useEffect(() => {
@@ -129,6 +136,21 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
       if (!selectedHeader?.bestellNr) return null;
       return receiptMasters.find(m => m.poId === selectedHeader.bestellNr);
   }, [selectedHeader, receiptMasters]);
+
+  // Zu viel total for return modal pre-fill
+  const zuVielTotal = useMemo(() => {
+      if (!linkedPO || !linkedMaster) return 0;
+      let total = 0;
+      linkedPO.items.forEach(poItem => {
+          let received = 0;
+          linkedMaster.deliveries.forEach(d => {
+              const di = d.items.find(x => x.sku === poItem.sku);
+              if (di) received += di.quantityAccepted;
+          });
+          total += Math.max(0, received - poItem.quantityExpected);
+      });
+      return total;
+  }, [linkedPO, linkedMaster]);
 
   // 1. Group Data Logic
   const groupedRows = useMemo(() => {
@@ -590,12 +612,26 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
     }
 
     // RETURN BUTTON (For ANY Issue or Overdelivery)
-    if (selectedHeader && ['Übermenge', 'Zu viel', 'Schaden', 'Beschädigt', 'Falsch geliefert', 'Abgelehnt', 'Sonstiges'].some(s => selectedHeader.status.includes(s)) && po && !po.isForceClosed) {
+    const effectiveReturnStatus = linkedMaster?.status || selectedHeader?.status || '';
+    if (selectedHeader && ['Übermenge', 'Zu viel', 'Schaden', 'Beschädigt', 'Falsch geliefert', 'Abgelehnt', 'Sonstiges'].some(s => effectiveReturnStatus.includes(s)) && po && !po.isForceClosed) {
       actions.push({
         key: 'return',
         label: 'Rücksendung',
         icon: LogOut,
-        onClick: (e: React.MouseEvent) => { e.stopPropagation(); onInspect(po, 'return'); },
+        onClick: (e: React.MouseEvent) => {
+          e.stopPropagation();
+          const defaultReason = effectiveReturnStatus.includes('Schaden') || effectiveReturnStatus.includes('Beschädigt') ? 'Schaden'
+            : effectiveReturnStatus.includes('Falsch') ? 'Falsch geliefert'
+            : effectiveReturnStatus.includes('Abgelehnt') ? 'Abgelehnt'
+            : 'Übermenge';
+          setReturnModal({
+            poId: po.id,
+            quantity: zuVielTotal > 0 ? zuVielTotal : 1,
+            reason: defaultReason,
+            carrier: '',
+            trackingId: ''
+          });
+        },
         variant: 'warning',
         tooltip: 'Rücksendung erfassen (Korrektur)'
       });
@@ -728,9 +764,129 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
     );
   };
 
+  
+  // --- RETURN MODAL HANDLER ---
+  const handleReturnConfirm = () => {
+      if (!returnModal || returnModal.quantity <= 0) return;
+      onProcessReturn(returnModal.poId, {
+          quantity: returnModal.quantity,
+          reason: returnModal.reason,
+          carrier: returnModal.carrier,
+          trackingId: returnModal.trackingId
+      });
+      setReturnModal(null);
+      setShowGrundOptions(false);
+  };
+
+  const RETURN_REASONS = ['Übermenge', 'Schaden', 'Falsch geliefert', 'Abgelehnt'];
+
+  const returnModalInputClass = `w-full border rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 transition-all ${isDark ? 'bg-slate-900 border-slate-700 text-slate-100 focus:ring-orange-500/30' : 'bg-white border-slate-200 text-slate-800 focus:ring-orange-500/20'}`;
+
+  // --- RETURN MODAL PORTAL ---
+  const returnModalPortal = returnModal && createPortal(
+    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => { setReturnModal(null); setShowGrundOptions(false); }}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div
+        className={`relative w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-5 animate-in zoom-in-95 duration-300 ${isDark ? 'bg-slate-900 border border-slate-700' : 'bg-white'}`}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-700">
+          <RotateCcw size={24} className="text-orange-500" />
+          <h3 className="text-lg font-bold">Rücksendung erfassen</h3>
+        </div>
+
+        {/* Menge */}
+        <div>
+          <label className="text-xs font-bold uppercase mb-2 block opacity-60">Menge</label>
+          <input
+            type="number"
+            min="1"
+            value={returnModal.quantity}
+            onChange={e => setReturnModal(prev => prev ? { ...prev, quantity: parseInt(e.target.value) || 1 } : null)}
+            className={returnModalInputClass}
+          />
+        </div>
+
+        {/* Grund (combobox: input + quick-pick chips) */}
+        <div>
+          <label className="text-xs font-bold uppercase mb-2 block opacity-60">Grund</label>
+          <div className="relative">
+            <input
+              value={returnModal.reason}
+              onChange={e => { setReturnModal(prev => prev ? { ...prev, reason: e.target.value } : null); setShowGrundOptions(true); }}
+              onFocus={() => setShowGrundOptions(true)}
+              placeholder="Grund wählen oder eingeben…"
+              className={returnModalInputClass}
+            />
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 opacity-40 pointer-events-none" />
+          </div>
+          {showGrundOptions && (
+            <div className={`mt-1 rounded-xl border shadow-xl overflow-hidden z-50 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+              {RETURN_REASONS.filter(r => !returnModal.reason || r.toLowerCase().includes(returnModal.reason.toLowerCase())).map(r => (
+                <button
+                  key={r}
+                  onClick={() => { setReturnModal(prev => prev ? { ...prev, reason: r } : null); setShowGrundOptions(false); }}
+                  className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors border-b last:border-0 ${
+                    returnModal.reason === r
+                      ? (isDark ? 'bg-orange-500/10 text-orange-400 border-slate-700' : 'bg-orange-50 text-orange-600 border-slate-100')
+                      : (isDark ? 'hover:bg-slate-700 text-slate-300 border-slate-700' : 'hover:bg-slate-50 text-slate-700 border-slate-100')
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Versandart */}
+        <div>
+          <label className="text-xs font-bold uppercase mb-2 block opacity-60">Versandart</label>
+          <input
+            value={returnModal.carrier}
+            onChange={e => setReturnModal(prev => prev ? { ...prev, carrier: e.target.value } : null)}
+            placeholder="DHL, Hermes..."
+            className={returnModalInputClass}
+          />
+        </div>
+
+        {/* Tracking-ID */}
+        <div>
+          <label className="text-xs font-bold uppercase mb-2 block opacity-60">Tracking-ID</label>
+          <input
+            value={returnModal.trackingId}
+            onChange={e => setReturnModal(prev => prev ? { ...prev, trackingId: e.target.value } : null)}
+            placeholder="Optional"
+            className={returnModalInputClass}
+          />
+        </div>
+
+        {/* Buttons */}
+        <div className="flex gap-3 pt-2">
+          <button
+            onClick={() => { setReturnModal(null); setShowGrundOptions(false); }}
+            className={`flex-1 px-4 py-3 rounded-xl font-bold transition-colors ${isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
+          >
+            Abbrechen
+          </button>
+          <button
+            onClick={handleReturnConfirm}
+            disabled={!returnModal.reason.trim() || returnModal.quantity <= 0}
+            className="flex-1 px-4 py-3 rounded-xl font-bold bg-orange-600 text-white hover:bg-orange-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Bestätigen
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+
   if (!selectedBatchId) {
     return (
       <div className="space-y-6 animate-in fade-in duration-300">
+        {returnModalPortal}
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <h2 className="text-2xl font-bold">Wareneingang Verwaltung</h2>
           <button
@@ -1015,7 +1171,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   const detailInspectionState = getInspectionState(selectedHeader, linkedPO || undefined, linkedMaster || undefined);
 
   return (
-    <div className="h-full flex flex-col animate-in slide-in-from-right-8 duration-300">
+      <div className="h-full flex flex-col animate-in slide-in-from-right-8 duration-300">
+        {returnModalPortal}
       
       {/* TOP NAVIGATION BAR - PERSISTENT */}
       <div className={`flex-none flex items-center gap-4 px-4 h-14 border-b z-20 ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>

@@ -721,7 +721,7 @@ export default function App() {
           });
       }
 
-      setReceiptHeaders(prev => prev.map(h => h.batchId === batchId ? { ...h, status: 'In PrÃ¼fung' } : h));
+      setReceiptHeaders(prev => prev.map(h => h.batchId === batchId ? { ...h, status: 'In Prüfung' } : h));
       
       if (linkedPO) {
            setPurchaseOrders(prev => prev.map(po => {
@@ -748,6 +748,13 @@ export default function App() {
                };
            }));
       }
+  };
+
+  };  // ← this is the closing brace of handleRevertReceipt (already there)
+
+  // --- DIRECT RETURN PROCESSING (No wizard) ---
+  const handleProcessReturn = (poId: string, data: { quantity: number; reason: string; carrier: string; trackingId: string }) => {
+      // ... entire handler from my previous message ...
   };
 
   return (
@@ -858,6 +865,7 @@ export default function App() {
                     onReceiveGoods={handleReceiveGoods}
                     onNavigate={handleNavigation}
                     onRevertReceipt={handleRevertReceipt}
+                    onProcessReturn={handleProcessReturn}
                     onInspect={(po, mode) => handleReceiveGoods(po.id, mode as 'standard' | 'return')} // Pass mode to handler
                   />
                 )}
