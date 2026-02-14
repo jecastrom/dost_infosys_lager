@@ -737,7 +737,20 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
     const clean = cart.map(c => ({ ...c, qty: c.qtyAccepted, isDamaged: c.rejectionReason === 'Damaged' && c.qtyRejected > 0, issueNotes: c.rejectionNotes || c.issueNotes }));
     if (onLogStock) clean.forEach(c => { if (c.qty !== 0) onLogStock(c.item.sku, c.item.name, c.qty > 0 ? 'add' : 'remove', Math.abs(c.qty), `Wareneingang ${headerData.lieferscheinNr}`, 'po-normal'); });
     const created = cart.filter(c => c.qtyAccepted > 0).map(c => c.item).filter(i => !existingItems.find(e => e.id === i.id));
-    onSuccess({ ...headerData, batchId, status: finalResultStatus }, clean, created, forceClose);
+    // Enrich cart items with proper rejection data from Beschädigt/Falsch columns
+    const enriched = clean.map((c: any) => {
+        const src = cart.find(x => x.item.sku === c.item.sku);
+        if (src) {
+            c.qtyDamaged = src.qtyDamaged;
+            c.qtyWrong = src.qtyWrong;
+            c.isDamaged = src.qtyDamaged > 0;
+            if (src.qtyDamaged > 0 && src.qtyWrong > 0) c.rejectionReason = 'Damaged';
+            else if (src.qtyDamaged > 0) c.rejectionReason = 'Damaged';
+            else if (src.qtyWrong > 0) c.rejectionReason = 'Wrong';
+        }
+        return c;
+    });
+    onSuccess({ ...headerData, batchId, status: finalResultStatus }, enriched, created, forceClose);
   };
 
   const inputClass = `w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 ${isDark ? 'bg-slate-900 border-slate-700 text-slate-100 focus:ring-blue-500/30' : 'bg-white border-slate-200 text-[#313335] focus:ring-[#0077B5]/20'}`;
@@ -1028,37 +1041,34 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                             <RotateCcw size={12}/> Rücksendung
                           </button>
                         )}
-                        <button onClick={() => updateCartItem(idx, 'showIssuePanel', !line.showIssuePanel)}
-                          className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ml-auto transition-all ${line.showIssuePanel ? (isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700') : (isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600')}`}>
-                          <AlertCircle size={12}/> {line.showIssuePanel ? 'Schließen' : 'Problem'}
-                        </button>
+                        {line.qtyDamaged === 0 && line.qtyWrong === 0 && !line.showIssuePanel && (
+                          <button onClick={() => updateCartItem(idx, 'showIssuePanel', true)}
+                            className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ml-auto transition-all ${isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}>
+                            <AlertCircle size={12}/> Problem
+                          </button>
+                        )}
+                        {(line.qtyDamaged > 0 || line.qtyWrong > 0 || line.showIssuePanel) && (
+                          <button onClick={() => { updateCartItem(idx, 'qtyDamaged', 0); updateCartItem(idx, 'qtyWrong', 0); updateCartItem(idx, 'showIssuePanel', false); }}
+                            className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ml-auto transition-all ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
+                            <AlertCircle size={12}/> Zurücksetzen
+                          </button>
+                        )}
                       </div>
 
-                      {line.showIssuePanel && (
+                      {/* Beschädigt / Falsch — Always visible when > 0 or issue panel open */}
+                      {(line.qtyDamaged > 0 || line.qtyWrong > 0 || line.showIssuePanel) && (
                         <div className={`p-4 space-y-3 border-t animate-in slide-in-from-top-2 ${isDark ? 'bg-black/20 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="text-xs font-bold text-red-500 uppercase mb-1 block">Ablehnen (Stk)</label>
-                              <input type="number" min="0" value={line.qtyRejected} onChange={e => updateCartItem(idx, 'qtyRejected', parseInt(e.target.value) || 0)} className={`w-full p-2 text-center font-bold text-red-500 border-2 rounded-lg ${isDark ? 'bg-slate-900 border-red-500/30' : 'bg-white border-red-200'}`} />
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-red-500 uppercase block">Beschädigt</label>
+                              <PlusMinusPicker value={line.qtyDamaged} onChange={v => updateCartItem(idx, 'qtyDamaged', v)} min={0} max={line.qtyReceived} isDark={isDark} />
                             </div>
-                            <div>
-                              <label className={`${labelClass} mb-1 block`}>Grund</label>
-                              <select value={line.rejectionReason} onChange={e => updateCartItem(idx, 'rejectionReason', e.target.value)} className={inputClass}>
-                                <option value="">Wählen...</option>
-                                <option value="Damaged">Beschädigt</option>
-                                <option value="Wrong">Falsch</option>
-                                <option value="Overdelivery">Übermenge</option>
-                                <option value="Other">Sonstiges</option>
-                              </select>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-orange-500 uppercase block">Falsch geliefert</label>
+                              <PlusMinusPicker value={line.qtyWrong} onChange={v => updateCartItem(idx, 'qtyWrong', v)} min={0} max={line.qtyReceived} isDark={isDark} />
                             </div>
                           </div>
                           <input value={line.rejectionNotes} onChange={e => updateCartItem(idx, 'rejectionNotes', e.target.value)} placeholder="Notiz..." className={inputClass} />
-                          {line.qtyRejected > 0 && (
-                            <div className="grid grid-cols-2 gap-3">
-                              <input value={line.returnCarrier} onChange={e => updateCartItem(idx, 'returnCarrier', e.target.value)} placeholder="Versandart (DHL...)" className={inputClass} />
-                              <input value={line.returnTrackingId} onChange={e => updateCartItem(idx, 'returnTrackingId', e.target.value)} placeholder="Tracking" className={inputClass} />
-                            </div>
-                          )}
                         </div>
                       )}
                     </div>
@@ -1119,15 +1129,16 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                                   </td>
                                   {linkedPoId && <td className="px-4 py-3 text-center">{calc.offen > 0 ? <span className="font-mono text-sm font-bold text-amber-500 flex items-center justify-center gap-1"><AlertTriangle size={12}/>{calc.offen}</span> : <span className="opacity-30 text-sm">—</span>}</td>}
                                   {linkedPoId && <td className="px-4 py-3 text-center"><span className={`font-mono text-sm font-bold ${calc.zuViel > 0 ? 'text-orange-500' : 'opacity-30'}`}>{calc.zuViel > 0 ? `+${calc.zuViel}` : '0'}</span></td>}
-                                  <td className="px-4 py-3 text-center">
-                                    <input 
-                                      type="number" 
-                                      min="0" 
-                                      value={cartLine.qtyRejected} 
-                                      onChange={e => updateCartItem(cartIdx, 'qtyRejected', parseInt(e.target.value) || 0)}
-                                      className={`w-20 px-2 py-1 text-center font-mono font-bold border-2 rounded ${isDark ? 'bg-slate-900 border-red-500/30 text-red-400' : 'bg-white border-red-200 text-red-600'}`}
-                                    />
-                                  </td>
+                                  {globalStats.totalDamaged > 0 && (
+                                    <td className="px-4 py-3">
+                                      <div className="flex justify-center"><PlusMinusPicker value={cartLine.qtyDamaged} onChange={v => updateCartItem(cartIdx, 'qtyDamaged', v)} min={0} max={cartLine.qtyReceived} isDark={isDark} /></div>
+                                    </td>
+                                  )}
+                                  {globalStats.totalWrong > 0 && (
+                                    <td className="px-4 py-3">
+                                      <div className="flex justify-center"><PlusMinusPicker value={cartLine.qtyWrong} onChange={v => updateCartItem(cartIdx, 'qtyWrong', v)} min={0} max={cartLine.qtyReceived} isDark={isDark} /></div>
+                                    </td>
+                                  )}
                                   <td className="px-4 py-3 text-center">
                                     <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-lg border ${cartLine.qtyAccepted > 0 ? (isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : cartLine.qtyAccepted < 0 ? (isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-700 border-orange-200') : (isDark ? 'bg-slate-800 text-slate-500 border-slate-700' : 'bg-slate-100 text-slate-400 border-slate-200')}`}>
                                       {cartLine.qtyAccepted > 0 ? `+${cartLine.qtyAccepted}` : cartLine.qtyAccepted}
@@ -1148,7 +1159,27 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                                           <RotateCcw size={12}/> Rücksendung
                                         </button>
                                       )}
-                                      {/* Problem Button - Always available */}
+                                      {/* Beschädigt Quick-Add */}
+                                      {globalStats.totalDamaged === 0 && (
+                                        <button 
+                                          onClick={() => updateCartItem(cartIdx, 'qtyDamaged', 1)}
+                                          className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${isDark ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
+                                          title="Beschädigt melden"
+                                        >
+                                          <AlertTriangle size={12}/> Schaden
+                                        </button>
+                                      )}
+                                      {/* Falsch Quick-Add */}
+                                      {globalStats.totalWrong === 0 && (
+                                        <button 
+                                          onClick={() => updateCartItem(cartIdx, 'qtyWrong', 1)}
+                                          className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${isDark ? 'text-orange-400 hover:bg-orange-500/20' : 'text-orange-500 hover:bg-orange-50'}`}
+                                          title="Falsch geliefert melden"
+                                        >
+                                          <XCircle size={12}/> Falsch
+                                        </button>
+                                      )}
+                                      {/* Problem Button - For notes */}
                                       <button 
                                         onClick={() => updateCartItem(cartIdx, 'showIssuePanel', !cartLine.showIssuePanel)}
                                         className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${cartLine.showIssuePanel ? (isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700') : (isDark ? 'text-slate-400 hover:text-slate-300 hover:bg-slate-800' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100')}`}
