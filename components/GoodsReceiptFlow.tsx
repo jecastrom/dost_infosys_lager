@@ -968,7 +968,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
               const c = getLineCalc(line);
               const statusColor = getAutoStatusIcon(line);
               const hasReturn = line.qtyRejected > 0;
-              const showReturnBtn = c.zuViel > 0 || (line.rejectionReason === 'Damaged' && line.qtyReceived > 0);
+              const showReturnBtn = c.zuViel > 0 || line.qtyDamaged > 0 || line.qtyWrong > 0;
 
               return (
                 <div className="space-y-3">
@@ -1178,10 +1178,10 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                                   </td>
                                   <td className="px-4 py-3">
                                     <div className="flex items-center justify-center gap-2">
-                                      {/* Return Button - Shows when there's overdelivery */}
-                                      {calc.zuViel > 0 && (
+                                      {/* Return Button - Shows for overdelivery, damage, or wrong */}
+                                      {(calc.zuViel > 0 || cartLine.qtyDamaged > 0 || cartLine.qtyWrong > 0) && (
                                         <button 
-                                          onClick={() => setReturnPopup({ idx: cartIdx, qty: calc.zuViel, reason: 'Überzahl', carrier: '', tracking: '' })}
+                                          onClick={() => setReturnPopup({ idx: cartIdx, qty: cartLine.qtyDamaged + cartLine.qtyWrong || calc.zuViel || 1, reason: cartLine.qtyDamaged > 0 ? 'Beschädigt' : cartLine.qtyWrong > 0 ? 'Falsch geliefert' : 'Überzahl', carrier: '', tracking: '' })}
                                           className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${isDark ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30' : 'bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100'}`}
                                           title="Rücksendung erstellen"
                                         >

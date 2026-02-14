@@ -591,8 +591,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
       };
     }
     
-    // Fully received, no inspection needed
-    return { canInspect: false, label: '', style: '' };
+    // Fully received - allow problem reporting
+    return { canInspect: false, label: 'Problem melden', style: 'problem' };
   };
 
   // --- ACTIONS RENDERER (Shared for both layouts) ---
@@ -637,6 +637,18 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
       });
     }
 
+    // PROBLEM BUTTON (Re-inspect completed receipt for damage/wrong discovered later)
+    if (po && !po.isForceClosed && inspectionState?.label === 'Problem melden' && selectedHeader && ['Gebucht', 'In Bearbeitung', 'In Prüfung'].some(s => (selectedHeader.status || '').includes(s))) {
+      actions.push({
+        key: 'problem',
+        label: 'Problem',
+        icon: AlertCircle,
+        onClick: (e: React.MouseEvent) => { e.stopPropagation(); onInspect(po, 'standard'); },
+        variant: 'danger',
+        tooltip: 'Nachträgliches Problem melden (Schaden / Falsch)'
+      });
+    }
+
     // CLOSE BUTTON
     if (selectedHeader && selectedHeader.status !== 'Abgeschlossen') {
       actions.push({
@@ -668,6 +680,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                     ? (isDark ? 'bg-blue-900/20 text-blue-400 border-blue-500/30 hover:bg-blue-900/40' : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100')
                     : action.variant === 'warning'
                     ? (isDark ? 'bg-orange-500/20 text-orange-400 border-orange-500/50 hover:bg-orange-500/30' : 'bg-orange-600 text-white border-orange-600 hover:bg-orange-700')
+                    : action.variant === 'danger'
+                    ? (isDark ? 'bg-red-500/20 text-red-400 border-red-500/50 hover:bg-red-500/30' : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100')
                     : (isDark ? 'border-slate-700 text-slate-400 hover:border-slate-600 hover:bg-slate-800' : 'border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50')
                 }`}
                 title={action.tooltip}
