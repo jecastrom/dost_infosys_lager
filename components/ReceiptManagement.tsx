@@ -91,6 +91,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   // Mobile action menu state
   const [showMobileActionMenu, setShowMobileActionMenu] = useState(false);
   const [problemConfirmPO, setProblemConfirmPO] = useState<PurchaseOrder | null>(null);
+  const [returnPickerPO, setReturnPickerPO] = useState<PurchaseOrder | null>(null);
   // New State: Delivery List Popover
   const [showDeliveryList, setShowDeliveryList] = useState(false);
 
@@ -625,13 +626,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
             : effectiveReturnStatus.includes('Falsch') ? 'Falsch geliefert'
             : effectiveReturnStatus.includes('Abgelehnt') ? 'Abgelehnt'
             : 'Übermenge';
-          setReturnModal({
-            poId: po.id,
-            quantity: zuVielTotal > 0 ? zuVielTotal : 1,
-            reason: defaultReason,
-            carrier: '',
-            trackingId: ''
-          });
+          setReturnPickerPO(po);
         },
         variant: 'warning',
         tooltip: 'Rücksendung erfassen (Korrektur)'
@@ -796,7 +791,74 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   const RETURN_REASONS = ['Übermenge', 'Schaden', 'Falsch geliefert', 'Abgelehnt'];
 
   const returnModalInputClass = `w-full border rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 transition-all ${isDark ? 'bg-slate-900 border-slate-700 text-slate-100 focus:ring-orange-500/30' : 'bg-white border-slate-200 text-slate-800 focus:ring-orange-500/20'}`;
-// --- PROBLEM CONFIRMATION PORTAL ---
+// --- RETURN PICKER PORTAL ---
+  const returnPickerPortal = returnPickerPO && linkedMaster && createPortal(
+    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setReturnPickerPO(null)}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className={`relative w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`} onClick={e => e.stopPropagation()}>
+        <div className={`p-5 border-b flex items-center justify-between ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+          <div className="flex items-center gap-3">
+            <RotateCcw size={20} className="text-orange-500" />
+            <h3 className="text-lg font-bold">Artikel für Rücksendung wählen</h3>
+          </div>
+          <button onClick={() => setReturnPickerPO(null)} className={`p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'}`}><X size={18} /></button>
+        </div>
+        <div className="max-h-[60vh] overflow-y-auto">
+          {(() => {
+            const lines: Array<{ sku: string; name: string; zuViel: number; damaged: number; wrong: number }> = [];
+            returnPickerPO.items.forEach(poItem => {
+              let totalAccepted = 0;
+              let totalDamaged = 0;
+              let totalWrong = 0;
+              linkedMaster.deliveries.filter(d => !d.isStorniert).forEach(d => {
+                const di = d.items.find(x => x.sku === poItem.sku);
+                if (di) {
+                  totalAccepted += di.quantityAccepted;
+                  if (di.damageFlag) totalDamaged += di.quantityRejected;
+                  else if (di.rejectionReason === 'Wrong') totalWrong += di.quantityRejected;
+                }
+              });
+              const zuViel = Math.max(0, totalAccepted - poItem.quantityExpected);
+              if (zuViel > 0 || totalDamaged > 0 || totalWrong > 0) {
+                lines.push({ sku: poItem.sku, name: poItem.name, zuViel, damaged: totalDamaged, wrong: totalWrong });
+              }
+            });
+            if (lines.length === 0) return (
+              <div className={`p-8 text-center ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                <Package size={32} className="mx-auto mb-3 opacity-30" />
+                <p className="font-bold">Keine Positionen mit Problemen</p>
+              </div>
+            );
+            return lines.map(line => {
+              const totalQty = line.zuViel + line.damaged + line.wrong;
+              const reason = line.damaged > 0 ? 'Schaden' : line.wrong > 0 ? 'Falsch geliefert' : 'Übermenge';
+              return (
+                <button key={line.sku} onClick={() => {
+                  setReturnPickerPO(null);
+                  setReturnModal({ poId: returnPickerPO.id, quantity: totalQty, reason, carrier: '', trackingId: '' });
+                }} className={`w-full text-left px-5 py-4 border-b last:border-0 transition-colors ${isDark ? 'border-slate-800 hover:bg-slate-800' : 'border-slate-100 hover:bg-slate-50'}`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-sm">{line.name}</div>
+                      <div className="text-[10px] font-mono opacity-50 mt-0.5">{line.sku}</div>
+                    </div>
+                    <ChevronRight size={16} className="opacity-30" />
+                  </div>
+                  <div className="flex gap-3 mt-2">
+                    {line.zuViel > 0 && <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-600 border-orange-200'}`}><Info size={10} /> Zu viel: {line.zuViel}</span>}
+                    {line.damaged > 0 && <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${isDark ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-red-50 text-red-600 border-red-200'}`}><AlertTriangle size={10} /> Beschädigt: {line.damaged}</span>}
+                    {line.wrong > 0 && <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'}`}><XCircle size={10} /> Falsch: {line.wrong}</span>}
+                  </div>
+                </button>
+              );
+            });
+          })()}
+        </div>
+      </div>
+    </div>, document.body
+  );
+
+  // --- PROBLEM CONFIRMATION PORTAL ---
   const problemConfirmPortal = problemConfirmPO && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={() => setProblemConfirmPO(null)}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -930,6 +992,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
     return (
       <div className="space-y-6 animate-in fade-in duration-300">
         {returnModalPortal}
+        {returnPickerPortal}
         {problemConfirmPortal}
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <h2 className="text-2xl font-bold">Wareneingang Verwaltung</h2>
@@ -1217,6 +1280,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   return (
       <div className="h-full flex flex-col animate-in slide-in-from-right-8 duration-300">
         {returnModalPortal}
+        {returnPickerPortal}
         {problemConfirmPortal}
       
       {/* TOP NAVIGATION BAR - PERSISTENT */}
