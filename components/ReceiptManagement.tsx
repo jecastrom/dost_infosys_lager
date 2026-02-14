@@ -796,7 +796,33 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   const RETURN_REASONS = ['Übermenge', 'Schaden', 'Falsch geliefert', 'Abgelehnt'];
 
   const returnModalInputClass = `w-full border rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 transition-all ${isDark ? 'bg-slate-900 border-slate-700 text-slate-100 focus:ring-orange-500/30' : 'bg-white border-slate-200 text-slate-800 focus:ring-orange-500/20'}`;
-
+{/* Problem Confirmation Dialog */}
+      {problemConfirmPO && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={() => setProblemConfirmPO(null)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className={`relative w-full max-w-md rounded-2xl border p-6 space-y-4 shadow-2xl ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              <div className={`p-3 rounded-xl ${isDark ? 'bg-red-500/20' : 'bg-red-50'}`}>
+                <AlertCircle size={24} className="text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">Nachträgliche Korrektur?</h3>
+                <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Die bestehende Buchung wird storniert.</p>
+              </div>
+            </div>
+            <div className={`p-3 rounded-lg text-sm space-y-1 ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-50 text-slate-600'}`}>
+              <p>• Der alte Wareneingang wird als <strong>Storniert</strong> markiert</p>
+              <p>• Der Lagerbestand wird entsprechend <strong>zurückgebucht</strong></p>
+              <p>• Eine neue Prüfung wird geöffnet — Sie erfassen alles neu</p>
+              <p>• Nur die neue Buchung zählt</p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setProblemConfirmPO(null)} className={`flex-1 px-4 py-3 rounded-xl font-bold ${isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Abbrechen</button>
+              <button onClick={() => { onInspect(problemConfirmPO, 'problem'); setProblemConfirmPO(null); }} className="flex-1 px-4 py-3 rounded-xl font-bold bg-red-600 text-white hover:bg-red-500">Ja, korrigieren</button>
+            </div>
+          </div>
+        </div>, document.body
+      )}
   // --- RETURN MODAL PORTAL ---
   const returnModalPortal = returnModal && createPortal(
     <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => { setReturnModal(null); setShowGrundOptions(false); }}>
@@ -902,6 +928,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
     return (
       <div className="space-y-6 animate-in fade-in duration-300">
         {returnModalPortal}
+        {problemConfirmPortal}
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <h2 className="text-2xl font-bold">Wareneingang Verwaltung</h2>
           <button
@@ -1188,6 +1215,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   return (
       <div className="h-full flex flex-col animate-in slide-in-from-right-8 duration-300">
         {returnModalPortal}
+        {problemConfirmPortal}
       
       {/* TOP NAVIGATION BAR - PERSISTENT */}
       <div className={`flex-none flex items-center gap-4 px-4 h-14 border-b z-20 ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>
