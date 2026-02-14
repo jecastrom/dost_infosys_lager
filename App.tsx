@@ -754,7 +754,191 @@ export default function App() {
 
   // --- DIRECT RETURN PROCESSING (No wizard) ---
   const handleProcessReturn = (poId: string, data: { quantity: number; reason: string; carrier: string; trackingId: string }) => {
-      // ... entire handler from my previous message ...
+      const po = purchaseOrders.find(p => p.id === poId);
+      if (!po) return;
+
+      const master = receiptMasters.find(m => m.poId === poId);
+      if (!master) return;
+
+      const batchId = `b-ret-${Date.now()}`;
+      const timestamp = Date.now();
+      const d = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\./g, '');
+      const lieferscheinNr = `RÜCK-${d}`;
+      const isProject = po.status === 'Projekt';
+
+      // Distribute return quantity across items with overdelivery
+      let remaining = data.quantity;
+      const returnLines: Array<{ sku: string; name: string; qty: number }> = [];
+
+      po.items.forEach(poItem => {
+          if (remaining <= 0) return;
+          let totalAccepted = 0;
+          master.deliveries.forEach(del => {
+              const di = del.items.find(x => x.sku === poItem.sku);
+              if (di) totalAccepted += di.quantityAccepted;
+          });
+          const overQty = Math.max(0, totalAccepted - poItem.quantityExpected);
+          if (overQty > 0) {
+              const returnQty = Math.min(overQty, remaining);
+              returnLines.push({ sku: poItem.sku, name: poItem.name, qty: returnQty });
+              remaining -= returnQty;
+          }
+      });
+
+      // Fallback: if no overdelivery items found, apply to first item
+      if (returnLines.length === 0 && po.items.length > 0) {
+          returnLines.push({ sku: po.items[0].sku, name: po.items[0].name, qty: data.quantity });
+      }
+
+      if (returnLines.length === 0) return;
+
+      // 1. Stock adjustment (subtract returned qty)
+      if (!isProject) {
+          setInventory(prev => {
+              const copy = [...prev];
+              returnLines.forEach(rl => {
+                  const idx = copy.findIndex(i => i.sku === rl.sku);
+                  if (idx >= 0) {
+                      copy[idx] = { ...copy[idx], stockLevel: Math.max(0, copy[idx].stockLevel - rl.qty), lastUpdated: timestamp };
+                  }
+              });
+              return copy;
+          });
+      }
+
+      // 2. Log stock removals
+      returnLines.forEach(rl => {
+          const item = inventory.find(i => i.sku === rl.sku);
+          if (item) {
+              handleLogStock(item.id, item.name, 'remove', rl.qty, `Rücksendung ${lieferscheinNr}`, isProject ? 'po-project' : 'po-normal');
+          }
+      });
+
+      // 3. Update PO items (decrease quantityReceived) + recalc status
+      setPurchaseOrders(prev => prev.map(p => {
+          if (p.id !== poId) return p;
+          const updatedItems = p.items.map(pItem => {
+              const rl = returnLines.find(r => r.sku === pItem.sku);
+              if (rl) return { ...pItem, quantityReceived: Math.max(0, pItem.quantityReceived - rl.qty) };
+              return pItem;
+          });
+          let nextStatus = p.status;
+          if (p.status !== 'Projekt' && p.status !== 'Lager') {
+              const allReceived = updatedItems.every(i => i.quantityReceived >= i.quantityExpected);
+              const anyReceived = updatedItems.some(i => i.quantityReceived > 0);
+              nextStatus = allReceived ? 'Abgeschlossen' : anyReceived ? 'Teilweise geliefert' : 'Offen';
+          }
+          return { ...p, items: updatedItems, status: nextStatus };
+      }));
+
+      // 4. Create receipt header for the return
+      const newHeader: ReceiptHeader = {
+          batchId,
+          lieferscheinNr,
+          bestellNr: poId,
+          lieferdatum: new Date().toISOString().split('T')[0],
+          lieferant: po.supplier,
+          status: 'Rücklieferung',
+          timestamp,
+          itemCount: returnLines.length,
+          warehouseLocation: 'Rücksendung',
+          createdByName: 'Admin User'
+      };
+      setReceiptHeaders(prev => [newHeader, ...prev]);
+
+      // 5. Create receipt items (negative qty to show as return)
+      const newReceiptItems: ReceiptItem[] = returnLines.map((rl, idx) => ({
+          id: `ri-${batchId}-${idx}`,
+          batchId,
+          sku: rl.sku,
+          name: rl.name,
+          quantity: -rl.qty,
+          targetLocation: 'Rücksendung',
+          isDamaged: data.reason === 'Schaden',
+          issueNotes: `Rücksendung: ${data.reason}${data.carrier ? ` via ${data.carrier}` : ''}${data.trackingId ? ` (${data.trackingId})` : ''}`
+      }));
+      setReceiptItems(prev => [...prev, ...newReceiptItems]);
+
+      // 6. Update ReceiptMaster: add return delivery log + recalc master status
+      const mapReason = (r: string): 'Damaged' | 'Wrong' | 'Overdelivery' | 'Other' => {
+          if (r === 'Schaden') return 'Damaged';
+          if (r === 'Falsch geliefert') return 'Wrong';
+          if (r === 'Übermenge') return 'Overdelivery';
+          return 'Other';
+      };
+
+      setReceiptMasters(prev => {
+          const existing = prev.find(m => m.poId === poId);
+          if (!existing) return prev;
+
+          const deliveryLog: DeliveryLog = {
+              id: crypto.randomUUID(),
+              date: new Date().toISOString(),
+              lieferscheinNr,
+              items: returnLines.map(rl => ({
+                  sku: rl.sku,
+                  receivedQty: 0,
+                  quantityAccepted: 0,
+                  quantityRejected: rl.qty,
+                  rejectionReason: mapReason(data.reason),
+                  returnCarrier: data.carrier,
+                  returnTrackingId: data.trackingId,
+                  damageFlag: data.reason === 'Schaden',
+                  manualAddFlag: false,
+                  orderedQty: po.items.find(pi => pi.sku === rl.sku)?.quantityExpected || 0,
+                  previousReceived: po.items.find(pi => pi.sku === rl.sku)?.quantityReceived || 0,
+                  offen: 0,
+                  zuViel: 0
+              }))
+          };
+
+          // Recalculate effective totals after the return
+          let totalOrdered = 0;
+          let totalEffective = 0;
+          po.items.forEach(pi => {
+              totalOrdered += pi.quantityExpected;
+              let accepted = 0;
+              existing.deliveries.forEach(del => {
+                  const di = del.items.find(x => x.sku === pi.sku);
+                  if (di) accepted += di.quantityAccepted;
+              });
+              const rl = returnLines.find(r => r.sku === pi.sku);
+              totalEffective += accepted - (rl ? rl.qty : 0);
+          });
+
+          let newStatus: ReceiptMasterStatus = totalEffective >= totalOrdered ? 'Gebucht'
+              : totalEffective > 0 ? 'Teillieferung'
+              : 'Offen';
+
+          return prev.map(m => m.id === existing.id ? {
+              ...m,
+              status: newStatus,
+              deliveries: [...m.deliveries, deliveryLog]
+          } : m);
+      });
+
+      // 7. Post system message to open tickets for this PO
+      const returnMsg = returnLines.map(rl =>
+          `Rücksendung: ${rl.qty}x ${rl.name} (${data.reason}).${data.carrier ? ` Via ${data.carrier}${data.trackingId ? ` (${data.trackingId})` : ''}` : ''}`
+      ).join('\n');
+
+      setTickets(prevTickets => prevTickets.map(ticket => {
+          if (ticket.status !== 'Open') return ticket;
+          const tHeader = receiptHeaders.find(h => h.batchId === ticket.receiptId);
+          if (tHeader && tHeader.bestellNr === poId) {
+              return {
+                  ...ticket,
+                  messages: [...ticket.messages, {
+                      id: crypto.randomUUID(),
+                      author: 'System',
+                      text: `📦 Logistik Update:\n${returnMsg}`,
+                      timestamp: Date.now() + 100,
+                      type: 'system' as const
+                  }]
+              };
+          }
+          return ticket;
+      }));
   };
 
   return (
