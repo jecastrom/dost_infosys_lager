@@ -31,7 +31,7 @@ interface ReceiptManagementProps {
   onReceiveGoods: (poId: string) => void;
   onNavigate: (module: ActiveModule) => void;
   onRevertReceipt: (batchId: string) => void;
-  onInspect: (po: PurchaseOrder, mode?: 'standard' | 'return') => void;
+  onInspect: (po: PurchaseOrder, mode?: 'standard' | 'return' | 'problem') => void;
   onProcessReturn: (poId: string, data: { quantity: number; reason: string; carrier: string; trackingId: string }) => void;
 }
 
@@ -90,6 +90,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
 
   // Mobile action menu state
   const [showMobileActionMenu, setShowMobileActionMenu] = useState(false);
+  const [problemConfirmPO, setProblemConfirmPO] = useState<PurchaseOrder | null>(null);
   // New State: Delivery List Popover
   const [showDeliveryList, setShowDeliveryList] = useState(false);
 
@@ -637,15 +638,15 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
       });
     }
 
-    // PROBLEM BUTTON (Re-inspect completed receipt for damage/wrong discovered later)
-    if (po && !po.isForceClosed && inspectionState?.label === 'Problem melden' && selectedHeader && ['Gebucht', 'In Bearbeitung', 'In Prüfung'].some(s => (selectedHeader.status || '').includes(s))) {
+    // PROBLEM BUTTON (Re-inspect: cancel old, create fresh)
+    if (po && !po.isForceClosed && selectedHeader && ['Gebucht', 'Teillieferung', 'Übermenge', 'Schaden', 'Beschädigt', 'Falsch geliefert'].some(s => (selectedHeader.status || '').includes(s))) {
       actions.push({
         key: 'problem',
         label: 'Problem',
         icon: AlertCircle,
-        onClick: (e: React.MouseEvent) => { e.stopPropagation(); onInspect(po, 'standard'); },
+        onClick: (e: React.MouseEvent) => { e.stopPropagation(); setProblemConfirmPO(po); },
         variant: 'danger',
-        tooltip: 'Nachträgliches Problem melden (Schaden / Falsch)'
+        tooltip: 'Nachträgliches Problem melden — Alte Buchung wird storniert'
       });
     }
 
