@@ -1024,12 +1024,12 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                         </div>
                         {/* Beschädigt Stepper - Always visible */}
                         <div className="flex justify-between items-center gap-3">
-                          <span className={`${labelClass} text-red-500 flex items-center gap-1`}><AlertTriangle size={12}/> Beschädigt</span>
+                          <span className={`${labelClass} flex items-center gap-1 ${line.qtyDamaged > 0 ? 'text-red-500 font-bold' : ''}`}><AlertTriangle size={12}/> Beschädigt</span>
                           <PlusMinusPicker value={line.qtyDamaged} onChange={v => updateCartItem(idx, 'qtyDamaged', v)} max={line.qtyReceived} disabled={isAdminClose} isDark={isDark} />
                         </div>
                         {/* Falsch Stepper - Always visible */}
                         <div className="flex justify-between items-center gap-3">
-                          <span className={`${labelClass} text-orange-500 flex items-center gap-1`}><XCircle size={12}/> Falsch geliefert</span>
+                          <span className={`${labelClass} flex items-center gap-1 ${line.qtyWrong > 0 ? 'text-orange-500 font-bold' : ''}`}><XCircle size={12}/> Falsch geliefert</span>
                           <PlusMinusPicker value={line.qtyWrong} onChange={v => updateCartItem(idx, 'qtyWrong', v)} max={line.qtyReceived - line.qtyDamaged} disabled={isAdminClose} isDark={isDark} />
                         </div>
                         {/* Offen - Read-only */}
@@ -1089,19 +1089,9 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                         )}
                       </div>
 
-                      {/* Beschädigt / Falsch — Always visible when > 0 or issue panel open */}
+                      {/* Issue Notes — Visible when damage/wrong > 0 or issue panel open */}
                       {(line.qtyDamaged > 0 || line.qtyWrong > 0 || line.showIssuePanel) && (
-                        <div className={`p-4 space-y-3 border-t animate-in slide-in-from-top-2 ${isDark ? 'bg-black/20 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-bold text-red-500 uppercase block">Beschädigt</label>
-                              <PlusMinusPicker value={line.qtyDamaged} onChange={v => updateCartItem(idx, 'qtyDamaged', v)} min={0} max={line.qtyReceived} isDark={isDark} />
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-bold text-orange-500 uppercase block">Falsch geliefert</label>
-                              <PlusMinusPicker value={line.qtyWrong} onChange={v => updateCartItem(idx, 'qtyWrong', v)} min={0} max={line.qtyReceived} isDark={isDark} />
-                            </div>
-                          </div>
+                        <div className={`p-4 border-t animate-in slide-in-from-top-2 ${isDark ? 'bg-black/20 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                           <input value={line.rejectionNotes} onChange={e => updateCartItem(idx, 'rejectionNotes', e.target.value)} placeholder="Notiz..." className={inputClass} />
                         </div>
                       )}
