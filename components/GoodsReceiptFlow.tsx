@@ -502,14 +502,17 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
     setCart(prev => prev.map((line, i) => {
       if (i !== index) return line;
       const u = { ...line, [field]: value };
-      if (field === 'qtyReceived' || field === 'qtyRejected' || field === 'qtyDamaged' || field === 'qtyWrong') {
-        u.qtyRejected = u.qtyDamaged + u.qtyWrong;
+      // Recalc rejection totals when damage/wrong/received changes
+      if (field === 'qtyDamaged' || field === 'qtyWrong' || field === 'qtyReceived' || field === 'qtyRejected') {
+        if (field === 'qtyDamaged' || field === 'qtyWrong') {
+          u.qtyRejected = u.qtyDamaged + u.qtyWrong;
+          // Auto-derive rejectionReason
+          if (u.qtyDamaged > 0 && u.qtyWrong > 0) u.rejectionReason = 'Damaged';
+          else if (u.qtyDamaged > 0) u.rejectionReason = 'Damaged';
+          else if (u.qtyWrong > 0) u.rejectionReason = 'Wrong';
+          else u.rejectionReason = '';
+        }
         u.qtyAccepted = u.qtyReceived - u.qtyRejected;
-        // Auto-set rejectionReason from math
-        if (u.qtyDamaged > 0 && u.qtyWrong > 0) u.rejectionReason = 'Damaged';
-        else if (u.qtyDamaged > 0) u.rejectionReason = 'Damaged';
-        else if (u.qtyWrong > 0) u.rejectionReason = 'Wrong';
-        else u.rejectionReason = '';
       }
       return u;
     }));
@@ -1001,6 +1004,24 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                           <span className={labelClass}>Heute geliefert</span>
                           <PlusMinusPicker value={line.qtyReceived} onChange={v => updateCartItem(idx, 'qtyReceived', v)} disabled={isAdminClose} isDark={isDark} />
                         </div>
+                        {/* Beschädigt Stepper - Always visible */}
+                        <div className="flex justify-between items-center gap-3">
+                          <span className={`${labelClass} text-red-500 flex items-center gap-1`}><AlertTriangle size={12}/> Beschädigt</span>
+                          <PlusMinusPicker value={line.qtyDamaged} onChange={v => updateCartItem(idx, 'qtyDamaged', v)} max={line.qtyReceived} disabled={isAdminClose} isDark={isDark} />
+                        </div>
+                        {/* Falsch Stepper - Always visible */}
+                        <div className="flex justify-between items-center gap-3">
+                          <span className={`${labelClass} text-orange-500 flex items-center gap-1`}><XCircle size={12}/> Falsch geliefert</span>
+                          <PlusMinusPicker value={line.qtyWrong} onChange={v => updateCartItem(idx, 'qtyWrong', v)} max={line.qtyReceived - line.qtyDamaged} disabled={isAdminClose} isDark={isDark} />
+                        </div>
+                        {/* Offen - Read-only */}
+                        {linkedPoId && c.offen > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className={`${labelClass} text-amber-500 flex items-center gap-1`}><AlertTriangle size={12}/> Offen</span>
+                            <span className="font-mono text-sm font-bold text-amber-500">{c.offen}</span>
+                          </div>
+                        )}
+                        {/* Zu viel - Read-only */}
                         {linkedPoId && c.zuViel > 0 && (
                           <div className="flex justify-between items-center">
                             <span className={`${labelClass} text-orange-500 flex items-center gap-1`}><AlertTriangle size={12}/> Zu viel</span>
@@ -1018,12 +1039,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                             Rücksendung: {line.returnCarrier || '—'} — Tracking: {line.returnTrackingId || '—'}{line.rejectionNotes ? ` — Grund: ${line.rejectionNotes}` : ''}
                           </div>
                         )}
-                        {linkedPoId && c.offen > 0 && (
-                          <div className={`flex justify-between items-center pt-2 border-t ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
-                            <span className="flex items-center gap-1"><AlertTriangle size={12} className="text-amber-500"/><span className="text-[10px] uppercase font-bold tracking-wider text-amber-500">Offen</span></span>
-                            <span className="font-mono text-sm font-bold text-amber-500">{c.offen}</span>
-                          </div>
-                        )}
+                        
                         <div className={`flex justify-between items-center ${!linkedPoId || c.offen === 0 ? 'pt-2 border-t' : ''} ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
                           <span className={labelClass}>Buchung</span>
                           <div className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-lg border ${line.qtyAccepted > 0 ? (isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : line.qtyAccepted < 0 ? (isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-700 border-orange-200') : (isDark ? 'bg-slate-800 text-slate-500 border-slate-700' : 'bg-slate-100 text-slate-400 border-slate-200')}`}>
@@ -1096,8 +1112,8 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                               {linkedPoId && <th className="px-4 py-3 text-center font-bold">Bestellt</th>}
                               {linkedPoId && <th className="px-4 py-3 text-center font-bold">Bis heute</th>}
                               <th className="px-4 py-3 text-center font-bold">Geliefert</th>
-                              {globalStats.totalDamaged > 0 && <th className="px-4 py-3 text-center font-bold text-red-500">Beschädigt</th>}
-                              {globalStats.totalWrong > 0 && <th className="px-4 py-3 text-center font-bold text-orange-500">Falsch</th>}
+                              <th className="px-4 py-3 text-center font-bold text-red-500">Beschädigt</th>
+                              <th className="px-4 py-3 text-center font-bold text-orange-500">Falsch</th>
                               {linkedPoId && <th className="px-4 py-3 text-center font-bold">Offen</th>}
                               {linkedPoId && <th className="px-4 py-3 text-center font-bold">Zu viel</th>}
                               <th className="px-4 py-3 text-center font-bold">Buchung</th>
@@ -1127,18 +1143,31 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                                       />
                                     </div>
                                   </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <div className="flex justify-center">
+                                      <PlusMinusPicker 
+                                        value={cartLine.qtyDamaged} 
+                                        onChange={v => updateCartItem(cartIdx, 'qtyDamaged', v)}
+                                        disabled={isAdminClose}
+                                        isDark={isDark}
+                                        max={cartLine.qtyReceived}
+                                      />
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <div className="flex justify-center">
+                                      <PlusMinusPicker 
+                                        value={cartLine.qtyWrong} 
+                                        onChange={v => updateCartItem(cartIdx, 'qtyWrong', v)}
+                                        disabled={isAdminClose}
+                                        isDark={isDark}
+                                        max={cartLine.qtyReceived - cartLine.qtyDamaged}
+                                      />
+                                    </div>
+                                  </td>
                                   {linkedPoId && <td className="px-4 py-3 text-center">{calc.offen > 0 ? <span className="font-mono text-sm font-bold text-amber-500 flex items-center justify-center gap-1"><AlertTriangle size={12}/>{calc.offen}</span> : <span className="opacity-30 text-sm">—</span>}</td>}
                                   {linkedPoId && <td className="px-4 py-3 text-center"><span className={`font-mono text-sm font-bold ${calc.zuViel > 0 ? 'text-orange-500' : 'opacity-30'}`}>{calc.zuViel > 0 ? `+${calc.zuViel}` : '0'}</span></td>}
-                                  {globalStats.totalDamaged > 0 && (
-                                    <td className="px-4 py-3">
-                                      <div className="flex justify-center"><PlusMinusPicker value={cartLine.qtyDamaged} onChange={v => updateCartItem(cartIdx, 'qtyDamaged', v)} min={0} max={cartLine.qtyReceived} isDark={isDark} /></div>
-                                    </td>
-                                  )}
-                                  {globalStats.totalWrong > 0 && (
-                                    <td className="px-4 py-3">
-                                      <div className="flex justify-center"><PlusMinusPicker value={cartLine.qtyWrong} onChange={v => updateCartItem(cartIdx, 'qtyWrong', v)} min={0} max={cartLine.qtyReceived} isDark={isDark} /></div>
-                                    </td>
-                                  )}
+                                  
                                   <td className="px-4 py-3 text-center">
                                     <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-lg border ${cartLine.qtyAccepted > 0 ? (isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : cartLine.qtyAccepted < 0 ? (isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-700 border-orange-200') : (isDark ? 'bg-slate-800 text-slate-500 border-slate-700' : 'bg-slate-100 text-slate-400 border-slate-200')}`}>
                                       {cartLine.qtyAccepted > 0 ? `+${cartLine.qtyAccepted}` : cartLine.qtyAccepted}
@@ -1159,26 +1188,7 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                                           <RotateCcw size={12}/> Rücksendung
                                         </button>
                                       )}
-                                      {/* Beschädigt Quick-Add */}
-                                      {globalStats.totalDamaged === 0 && (
-                                        <button 
-                                          onClick={() => updateCartItem(cartIdx, 'qtyDamaged', 1)}
-                                          className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${isDark ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
-                                          title="Beschädigt melden"
-                                        >
-                                          <AlertTriangle size={12}/> Schaden
-                                        </button>
-                                      )}
-                                      {/* Falsch Quick-Add */}
-                                      {globalStats.totalWrong === 0 && (
-                                        <button 
-                                          onClick={() => updateCartItem(cartIdx, 'qtyWrong', 1)}
-                                          className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${isDark ? 'text-orange-400 hover:bg-orange-500/20' : 'text-orange-500 hover:bg-orange-50'}`}
-                                          title="Falsch geliefert melden"
-                                        >
-                                          <XCircle size={12}/> Falsch
-                                        </button>
-                                      )}
+                                      
                                       {/* Problem Button - For notes */}
                                       <button 
                                         onClick={() => updateCartItem(cartIdx, 'showIssuePanel', !cartLine.showIssuePanel)}
@@ -1216,29 +1226,12 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
                             
                             <div className="grid grid-cols-2 gap-3">
                               <div>
-                                <label className="block text-xs font-bold mb-1.5">Grund</label>
-                                <select 
-                                  value={cartLine.rejectionReason || ''}
-                                  onChange={e => updateCartItem(cartIdx, 'rejectionReason', e.target.value)}
-                                  className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-300'}`}
-                                >
-                                  <option value="">Grund wählen...</option>
-                                  <option value="Damaged">Beschädigt</option>
-                                  <option value="Wrong">Falsch</option>
-                                  <option value="Overdelivery">Übermenge</option>
-                                  <option value="Other">Sonstiges</option>
-                                </select>
+                                <label className="block text-xs font-bold mb-1.5 text-red-500">Beschädigt</label>
+                                <div className="text-sm font-mono font-bold text-red-500">{cartLine.qtyDamaged > 0 ? `${cartLine.qtyDamaged} Stk` : '—'}</div>
                               </div>
-                              
                               <div>
-                                <label className="block text-xs font-bold mb-1.5">Betroffene Menge</label>
-                                <input 
-                                  type="number"
-                                  min="0"
-                                  value={cartLine.qtyRejected}
-                                  onChange={e => updateCartItem(cartIdx, 'qtyRejected', parseInt(e.target.value) || 0)}
-                                  className={`w-full px-3 py-2 rounded-lg border text-sm font-mono ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-300'}`}
-                                />
+                                <label className="block text-xs font-bold mb-1.5 text-orange-500">Falsch geliefert</label>
+                                <div className="text-sm font-mono font-bold text-orange-500">{cartLine.qtyWrong > 0 ? `${cartLine.qtyWrong} Stk` : '—'}</div>
                               </div>
                             </div>
                             
