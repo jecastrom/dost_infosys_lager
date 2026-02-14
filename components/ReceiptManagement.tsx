@@ -902,7 +902,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                          </div>
                        )}
                      </div>
-                     {(inspectionState?.canInspect || (row.status && ['Ãœbermenge', 'Zu viel', 'Schaden', 'BeschÃ¤digt', 'Falsch geliefert', 'Abgelehnt', 'Sonstiges'].some(s => row.status.includes(s)))) && (
+                     {(inspectionState?.canInspect || (row.status && ['Übermenge', 'Zu viel', 'Schaden', 'BeschÃ¤digt', 'Falsch geliefert', 'Abgelehnt', 'Sonstiges'].some(s => row.status.includes(s)))) && (
                        <div className="flex items-center gap-2 pt-3 border-t border-slate-200 dark:border-slate-700" onClick={(e) => e.stopPropagation()}>
                          {renderActions(inspectionState, linkedPO)}
                        </div>

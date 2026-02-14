@@ -490,7 +490,7 @@ export default function App() {
                      // FORCE CLOSE: Treat as 'Gebucht' regardless of math
                      finalReceiptStatus = 'Gebucht'; 
                  } else if (totalReceivedIncludingCurrent > totalOrdered) {
-                     finalReceiptStatus = 'Ãœbermenge'; // Fixed form ÃƒÅ“bermenge
+                     finalReceiptStatus = 'Übermenge'; // Fixed form ÃƒÅ“bermenge
                  } else if (totalReceivedIncludingCurrent < totalOrdered) {
                      // If we received less than total ordered, it is Partial.
                      finalReceiptStatus = 'Teillieferung';
