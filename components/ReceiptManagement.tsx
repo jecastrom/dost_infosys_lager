@@ -796,8 +796,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   const RETURN_REASONS = ['Übermenge', 'Schaden', 'Falsch geliefert', 'Abgelehnt'];
 
   const returnModalInputClass = `w-full border rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 transition-all ${isDark ? 'bg-slate-900 border-slate-700 text-slate-100 focus:ring-orange-500/30' : 'bg-white border-slate-200 text-slate-800 focus:ring-orange-500/20'}`;
-{/* Problem Confirmation Dialog */}
-      {problemConfirmPO && createPortal(
+// --- PROBLEM CONFIRMATION PORTAL ---
+  const problemConfirmPortal = problemConfirmPO && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={() => setProblemConfirmPO(null)}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <div className={`relative w-full max-w-md rounded-2xl border p-6 space-y-4 shadow-2xl ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`} onClick={e => e.stopPropagation()}>
@@ -822,7 +822,9 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
             </div>
           </div>
         </div>, document.body
-      )}
+      );
+
+  // --- RETURN MODAL PORTAL ---)}
   // --- RETURN MODAL PORTAL ---
   const returnModalPortal = returnModal && createPortal(
     <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => { setReturnModal(null); setShowGrundOptions(false); }}>

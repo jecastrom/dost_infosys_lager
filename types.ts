@@ -69,7 +69,8 @@ export const TRANSACTION_STATUS_OPTIONS = [
   'Abgelehnt', 
   'Rücklieferung', 
   'Falsch geliefert',
-  'Gebucht'
+  'Gebucht',
+  'Storniert'
 ];
 
 // --- Purchase Order Types (Process-Driven Workflow) ---
