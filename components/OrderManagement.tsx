@@ -166,13 +166,16 @@ const OrderStatusBadges = ({ order, linkedReceipt, theme }: { order: PurchaseOrd
                 </span>
             );
         } else if (s === 'Übermenge') {
-            badges.push(
-                <span key="proc-over" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider flex items-center gap-1 ${
-                    isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-600 border-orange-200'
-                }`}>
-                    <Info size={10} /> Übermenge
-                </span>
-            );
+            // Only show if lifecycle badge didn't already show Übermenge
+            if (totalReceived <= totalOrdered) {
+                badges.push(
+                    <span key="proc-over" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider flex items-center gap-1 ${
+                        isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-600 border-orange-200'
+                    }`}>
+                        <Info size={10} /> Übermenge
+                    </span>
+                );
+            }
         } else if (s === 'Abgelehnt') {
             badges.push(
                 <span key="proc-rejected" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider flex items-center gap-1 ${
