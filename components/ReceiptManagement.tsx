@@ -694,11 +694,18 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
       });
     }
 
-    // ARCHIVE BUTTON - Always available
+    // ARCHIVE BUTTON - Only for completed receipts with no open tickets (always allow unarchive)
     if (activeHeader) {
-      const rowForArchive: ReceiptListRow = { ...(activeHeader as ReceiptListRow) };
-      const isCurrentlyArchived = rowForArchive.isArchived || archivedReceiptGroups.has(activeHeader.bestellNr || activeHeader.batchId);
-      actions.push({
+      const archiveKey = activeHeader.bestellNr || activeHeader.batchId;
+      const isCurrentlyArchived = archivedReceiptGroups.has(archiveKey);
+      const archiveStatus = (activeMaster?.status || activeHeader?.status || '').toLowerCase().trim();
+      const isCompleted = ['gebucht', 'abgeschlossen', 'in bearbeitung', 'erledigt'].includes(archiveStatus);
+      const archiveTickets = activeHeader.bestellNr
+        ? tickets.filter(t => { const h = headers.find(hdr => hdr.batchId === t.receiptId); return h?.bestellNr === activeHeader.bestellNr; })
+        : tickets.filter(t => t.receiptId === activeHeader.batchId);
+      const hasOpenCases = archiveTickets.some(t => t.status === 'Open');
+      const canArchive = isCurrentlyArchived || (isCompleted && !hasOpenCases);
+      if (canArchive) actions.push({
         key: 'archive',
         label: isCurrentlyArchived ? 'Aus Archiv holen' : 'Archivieren',
         icon: Archive,
