@@ -1084,7 +1084,7 @@ export default function App() {
                   <GoodsReceiptFlow 
                     theme={theme}
                     existingItems={inventory}
-                    onClose={() => handleNavigation('dashboard')}
+                    onClose={() => handleNavigation('receipt-management')}
                     onSuccess={handleReceiptSuccess}
                     // onLogStock removed to prevent double logging - handled in onSuccess
                     purchaseOrders={purchaseOrders}
