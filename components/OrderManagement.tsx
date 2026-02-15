@@ -581,6 +581,8 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
 
                    {/* PORTAL FOR DROPDOWN */}
                    {isMenuOpen && createPortal(
+                     <>
+                     <div className="fixed inset-0 z-[49]" onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); }} />
                      <div 
                        style={{ top: menuPos.top, right: menuPos.right }}
                        className={`fixed z-50 w-56 rounded-xl shadow-xl border p-1 animate-in fade-in zoom-in-95 duration-100 origin-top-right ${
@@ -609,7 +611,8 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                            <MenuItem icon={Archive} label="Archivieren" onClick={() => handleArchiveClick(order.id)} />
                          )}
                        </div>
-                     </div>,
+                     </div>
+                     </>,
                      document.body
                    )}
                  </div>
@@ -684,6 +687,8 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                         
                         {/* PORTAL FOR DROPDOWN TO PREVENT CLIPPING */}
                         {isMenuOpen && createPortal(
+                            <>
+                            <div className="fixed inset-0 z-[49]" onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); }} />
                             <div 
                                 style={{ top: menuPos.top, right: menuPos.right }}
                                 className={`fixed z-50 w-56 rounded-xl shadow-xl border p-1 animate-in fade-in zoom-in-95 duration-100 origin-top-right ${
@@ -712,7 +717,8 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                                         <MenuItem icon={Archive} label="Archivieren" onClick={() => handleArchiveClick(order.id)} />
                                     )}
                                 </div>
-                            </div>,
+                            </div>
+                            </>,
                             document.body
                         )}
                     </td>
