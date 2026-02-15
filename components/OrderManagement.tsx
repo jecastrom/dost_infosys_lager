@@ -257,14 +257,13 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedOrder, confirmModalOpen, isEditingLink, activeMenuId]);
 
-  // Lock body scroll when any dropdown menu is open (prevents scrollbar jump)
+  // Close menu on any outside click (no backdrop div needed)
   useEffect(() => {
-    if (activeMenuId) {
-        document.body.style.overflow = 'hidden';
-    } else {
-        document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
+    if (!activeMenuId) return;
+    const handleClickOutside = () => setActiveMenuId(null);
+    // Delay to avoid catching the opening click
+    const timer = setTimeout(() => window.addEventListener('click', handleClickOutside), 0);
+    return () => { clearTimeout(timer); window.removeEventListener('click', handleClickOutside); };
   }, [activeMenuId]);
 
   // Reset link state when opening modal
@@ -591,13 +590,12 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
 
                    {/* PORTAL FOR DROPDOWN */}
                    {isMenuOpen && createPortal(
-                     <>
-                     <div className="fixed inset-0 z-[49]" onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); }} />
                      <div 
                        style={{ top: menuPos.top, right: menuPos.right }}
                        className={`fixed z-50 w-56 rounded-xl shadow-xl border p-1 animate-in fade-in zoom-in-95 duration-100 origin-top-right ${
                          isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
                        }`}
+                       onClick={(e) => e.stopPropagation()}
                      >
                        <div className="flex flex-col gap-0.5">
                          <MenuItem icon={Eye} label="Details ansehen" onClick={() => { setSelectedOrder(order); setActiveMenuId(null); }} />
@@ -621,8 +619,7 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                            <MenuItem icon={Archive} label="Archivieren" onClick={() => handleArchiveClick(order.id)} />
                          )}
                        </div>
-                     </div>
-                     </>,
+                     </div>,
                      document.body
                    )}
                  </div>
@@ -697,13 +694,12 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                         
                         {/* PORTAL FOR DROPDOWN TO PREVENT CLIPPING */}
                         {isMenuOpen && createPortal(
-                            <>
-                            <div className="fixed inset-0 z-[49]" onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); }} />
                             <div 
                                 style={{ top: menuPos.top, right: menuPos.right }}
                                 className={`fixed z-50 w-56 rounded-xl shadow-xl border p-1 animate-in fade-in zoom-in-95 duration-100 origin-top-right ${
                                     isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
                                 }`}
+                                onClick={(e) => e.stopPropagation()}
                             >
                                 <div className="flex flex-col gap-0.5">
                                     <MenuItem icon={Eye} label="Details ansehen" onClick={() => { setSelectedOrder(order); setActiveMenuId(null); }} />
@@ -727,8 +723,7 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                                         <MenuItem icon={Archive} label="Archivieren" onClick={() => handleArchiveClick(order.id)} />
                                     )}
                                 </div>
-                            </div>
-                            </>,
+                            </div>,
                             document.body
                         )}
                     </td>
