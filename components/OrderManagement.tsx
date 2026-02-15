@@ -788,8 +788,8 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                     </div>
                 </div>
 
-                <div className={`px-6 py-6 border-b ${isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50/50 border-slate-100'}`}>
-                    <LifecycleStepper status={getVisualLifecycleStatus(selectedOrder)} hasOpenTickets={hasOpenTickets} theme={theme} />
+               <div className={`px-6 py-6 border-b ${isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50/50 border-slate-100'}`}>
+                    <LifecycleStepper status={getVisualLifecycleStatus(selectedOrder)} hasOpenTickets={hasOpenTickets} receiptStatus={receiptMasters.find(m => m.poId === selectedOrder.id)?.status} theme={theme} />
                 </div>
                 
                 <div className="flex-1 overflow-y-auto p-0">

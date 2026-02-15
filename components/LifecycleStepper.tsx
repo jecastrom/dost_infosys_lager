@@ -5,20 +5,24 @@ import { Theme } from '../types';
 interface LifecycleStepperProps {
   status: string;
   hasOpenTickets: boolean;
+  receiptStatus?: string;
   theme: Theme;
 }
 
 type StepState = 'completed' | 'current' | 'pending' | 'issue';
 
-export const LifecycleStepper: React.FC<LifecycleStepperProps> = ({ status, hasOpenTickets, theme }) => {
+export const LifecycleStepper: React.FC<LifecycleStepperProps> = ({ status, hasOpenTickets, receiptStatus, theme }) => {
   const isDark = theme === 'dark';
 
   // --- Logic to determine the state of Step 2 (Wareneingang) ---
+  const rs = (receiptStatus || '').toLowerCase();
+  const hasReceiptIssues = ['schaden', 'falsch', 'beschädigt', 'abgelehnt', 'schaden + falsch'].some(k => rs.includes(k));
+
   const getStep2State = (): StepState => {
-    // Priority 1: Issues exist
-    if (hasOpenTickets) return 'issue';
+    // Priority 1: Issues from tickets OR receipt quality problems
+    if (hasOpenTickets || hasReceiptIssues) return 'issue';
     
-    // Priority 2: Completed
+    // Priority 2: Completed (only if receipt is also clean)
     if (status === 'Abgeschlossen') return 'completed';
     
     // Priority 3: In Progress (Partial or In Check)
@@ -32,7 +36,8 @@ export const LifecycleStepper: React.FC<LifecycleStepperProps> = ({ status, hasO
 
   // --- Logic to determine the state of Step 3 (Abschluss) ---
   const getStep3State = (): StepState => {
-    if (status === 'Abgeschlossen') return 'completed';
+    // Don't show completed if there are receipt issues
+    if (status === 'Abgeschlossen' && !hasReceiptIssues && !hasOpenTickets) return 'completed';
     return 'pending';
   };
 
