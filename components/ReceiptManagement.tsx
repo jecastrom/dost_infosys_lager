@@ -89,7 +89,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   const [expandedDeliveryId, setExpandedDeliveryId] = useState<string | null>(null);
 
   // Mobile action menu state
-  const [showMobileActionMenu, setShowMobileActionMenu] = useState<string | null>(null);
+  const [showMobileActionMenu, setShowMobileActionMenu] = useState<string | null>(null)
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [problemConfirmPO, setProblemConfirmPO] = useState<PurchaseOrder | null>(null);
   const [returnPickerPO, setReturnPickerPO] = useState<PurchaseOrder | null>(null);
   // New State: Delivery List Popover
@@ -546,6 +547,14 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
           );
       }
 
+      if (isImplicitlyClosed && isOver) {
+          return (
+            <div className="flex justify-center" title="Abgeschlossen (Übermenge akzeptiert)">
+                <CheckCircle2 size={18} className="text-slate-400" />
+            </div>
+          );
+      }
+
       // Scenario C: Perfect -> Green Check
       if (isPerfect) {
           return (<div className="flex justify-center"><CheckCircle2 size={18} className="text-emerald-500" /></div>);
@@ -604,8 +613,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
     const thisMenuKey = menuKey || 'detail';
     const actions = [];
 
-    // SMART INSPECT BUTTON (Standard / Replacement)
-    if (inspectionState?.canInspect && po) {
+    // SMART INSPECT BUTTON (Standard / Replacement) - Hidden when manually closed
+    if (inspectionState?.canInspect && po && !po.isForceClosed) {
       actions.push({
         key: 'inspect',
         label: inspectionState.label === 'Prüfung fortsetzen' ? 'Prüfen' : 'Nachlieferung',
@@ -616,9 +625,9 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
       });
     }
 
-    // RETURN BUTTON (For ANY Issue or Overdelivery)
+    // RETURN BUTTON (For ANY Issue or Overdelivery) - Hidden when manually closed
     const effectiveReturnStatus = activeMaster?.status || activeHeader?.status || '';
-    if (activeHeader && ['Übermenge', 'Zu viel', 'Schaden', 'Beschädigt', 'Falsch geliefert', 'Abgelehnt', 'Sonstiges'].some(s => effectiveReturnStatus.includes(s)) && po && !po.isForceClosed) {
+    if (!po?.isForceClosed && activeHeader && ['Übermenge', 'Zu viel', 'Schaden', 'Beschädigt', 'Falsch geliefert', 'Abgelehnt', 'Sonstiges'].some(s => effectiveReturnStatus.includes(s)) && po) {
       actions.push({
         key: 'return',
         label: 'Rücksendung',
@@ -636,8 +645,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
       });
     }
 
-    // PROBLEM BUTTON (Re-inspect: cancel old, create fresh)
-    if (po && !po.isForceClosed && activeHeader && ['Gebucht', 'Teillieferung', 'Übermenge', 'Schaden', 'Beschädigt', 'Falsch geliefert'].some(s => (activeHeader.status || '').includes(s))) {
+    // PROBLEM BUTTON (Re-inspect: cancel old, create fresh) - ALWAYS available
+    if (po && activeHeader) {
       actions.push({
         key: 'problem',
         label: 'Problem',
@@ -648,13 +657,13 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
       });
     }
 
-    // CLOSE BUTTON
-    if (activeHeader && activeHeader.status !== 'Abgeschlossen') {
+    // CLOSE BUTTON - Hidden when already closed or force closed
+    if (activeHeader && activeHeader.status !== 'Abgeschlossen' && !po?.isForceClosed) {
       actions.push({
         key: 'close',
         label: 'Schließen',
         icon: Archive,
-        onClick: handleForceClose,
+        onClick: (e: React.MouseEvent) => { e.stopPropagation(); setShowCloseConfirm(true); },
         variant: 'ghost',
         tooltip: 'Abschließen'
       });
@@ -839,7 +848,35 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
         </div>, document.body
       );
 
-  // --- RETURN MODAL PORTAL ---)}
+  // --- CLOSE CONFIRMATION PORTAL ---
+  const closeConfirmPortal = showCloseConfirm && createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={() => setShowCloseConfirm(false)}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className={`relative w-full max-w-md rounded-2xl border p-6 space-y-4 shadow-2xl ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`} onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-3">
+          <div className={`p-3 rounded-xl ${isDark ? 'bg-red-500/20' : 'bg-red-50'}`}>
+            <Archive size={24} className="text-red-500" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold">Vorgang abschließen?</h3>
+            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Diese Aktion kann nicht rückgängig gemacht werden.</p>
+          </div>
+        </div>
+        <div className={`p-3 rounded-lg text-sm space-y-1 ${isDark ? 'bg-red-500/10 border border-red-500/20 text-slate-300' : 'bg-red-50 border border-red-200 text-slate-600'}`}>
+          <p>• Es gibt möglicherweise <strong>offene Restmengen</strong>, die nicht geliefert wurden</p>
+          <p>• Nach dem Abschluss sind <strong>keine weiteren Buchungen</strong> möglich</p>
+          <p>• Offene Mengen werden als <strong>storniert</strong> betrachtet</p>
+          <p>• Bei Bedarf können Sie über <strong>„Problem"</strong> eine Korrektur einleiten</p>
+        </div>
+        <div className="flex gap-3 pt-2">
+          <button onClick={() => setShowCloseConfirm(false)} className={`flex-1 px-4 py-3 rounded-xl font-bold ${isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Abbrechen</button>
+          <button onClick={() => { handleForceClose(); setShowCloseConfirm(false); }} className="flex-1 px-4 py-3 rounded-xl font-bold bg-red-600 text-white hover:bg-red-500">Ja, abschließen</button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+
   // --- RETURN MODAL PORTAL ---
   const returnModalPortal = returnModal && createPortal(
     <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => { setReturnModal(null); setShowGrundOptions(false); }}>
@@ -947,6 +984,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
         {returnModalPortal}
         {returnPickerPortal}
         {problemConfirmPortal}
+        {closeConfirmPortal}
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <h2 className="text-2xl font-bold">Wareneingang Verwaltung</h2>
           <button
@@ -1235,6 +1273,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
         {returnModalPortal}
         {returnPickerPortal}
         {problemConfirmPortal}
+        {closeConfirmPortal}
       
       {/* TOP NAVIGATION BAR - PERSISTENT */}
       <div className={`flex-none flex items-center gap-4 px-4 h-14 border-b z-20 ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>

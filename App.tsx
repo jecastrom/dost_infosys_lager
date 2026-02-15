@@ -265,6 +265,25 @@ export default function App() {
 
   const handleReceiptStatusUpdate = (batchId: string, newStatus: string) => {
     setReceiptHeaders(prev => prev.map(h => h.batchId === batchId ? { ...h, status: newStatus } : h));
+
+    // When manually closing (Abgeschlossen), propagate to master + PO
+    if (newStatus === 'Abgeschlossen') {
+      const header = receiptHeaders.find(h => h.batchId === batchId);
+      if (header?.bestellNr) {
+        const poId = header.bestellNr;
+        // Update receipt master status
+        setReceiptMasters(prev => prev.map(m => m.poId === poId ? { ...m, status: 'Abgeschlossen' as ReceiptMasterStatus } : m));
+        // Update PO: set isForceClosed + status Abgeschlossen
+        setPurchaseOrders(prev => prev.map(po => {
+          if (po.id !== poId) return po;
+          let nextStatus = po.status;
+          if (po.status !== 'Projekt' && po.status !== 'Lager') {
+            nextStatus = 'Abgeschlossen';
+          }
+          return { ...po, status: nextStatus, isForceClosed: true };
+        }));
+      }
+    }
   };
 
   const handleAddComment = (batchId: string, type: 'note' | 'email' | 'call', message: string) => {
