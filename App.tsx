@@ -512,6 +512,15 @@ export default function App() {
     // Safety Net: Default to 'Gebucht' if status comes in empty
     let finalReceiptStatus = headerData.status || 'Gebucht';
 
+    // Detect quality issues from actual cart data (overrides empty/stale status)
+    const cartHasDamage = cartItems.some((c: any) => c.qtyDamaged > 0);
+    const cartHasWrong = cartItems.some((c: any) => c.qtyWrong > 0);
+    const cartAllRejected = cartItems.length > 0 && cartItems.every((c: any) => c.qtyRejected === c.qtyReceived && c.qtyReceived > 0);
+    if (cartAllRejected) finalReceiptStatus = 'Abgelehnt';
+    else if (cartHasDamage && cartHasWrong) finalReceiptStatus = 'Schaden + Falsch';
+    else if (cartHasDamage) finalReceiptStatus = 'Schaden';
+    else if (cartHasWrong) finalReceiptStatus = 'Falsch geliefert';
+
     if (headerData.bestellNr) {
         const poId = headerData.bestellNr;
         const currentPO = purchaseOrders.find(p => p.id === poId);
