@@ -89,7 +89,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   const [expandedDeliveryId, setExpandedDeliveryId] = useState<string | null>(null);
 
   // Mobile action menu state
-  const [showMobileActionMenu, setShowMobileActionMenu] = useState(false);
+  const [showMobileActionMenu, setShowMobileActionMenu] = useState<string | null>(null);
   const [problemConfirmPO, setProblemConfirmPO] = useState<PurchaseOrder | null>(null);
   const [returnPickerPO, setReturnPickerPO] = useState<PurchaseOrder | null>(null);
   // New State: Delivery List Popover
@@ -598,7 +598,10 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   };
 
   // --- ACTIONS RENDERER (Shared for both layouts) ---
-  const renderActions = (inspectionState?: { canInspect: boolean, label: string, style: string }, po?: PurchaseOrder) => {
+  const renderActions = (inspectionState?: { canInspect: boolean, label: string, style: string }, po?: PurchaseOrder, rowHeader?: ReceiptHeader | ReceiptListRow, rowMaster?: ReceiptMaster | null, menuKey?: string) => {
+    const activeHeader = rowHeader || selectedHeader;
+    const activeMaster = rowMaster !== undefined ? rowMaster : linkedMaster;
+    const thisMenuKey = menuKey || 'detail';
     const actions = [];
 
     // SMART INSPECT BUTTON (Standard / Replacement)
@@ -614,8 +617,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
     }
 
     // RETURN BUTTON (For ANY Issue or Overdelivery)
-    const effectiveReturnStatus = linkedMaster?.status || selectedHeader?.status || '';
-    if (selectedHeader && ['Übermenge', 'Zu viel', 'Schaden', 'Beschädigt', 'Falsch geliefert', 'Abgelehnt', 'Sonstiges'].some(s => effectiveReturnStatus.includes(s)) && po && !po.isForceClosed) {
+    const effectiveReturnStatus = activeMaster?.status || activeHeader?.status || '';
+    if (activeHeader && ['Übermenge', 'Zu viel', 'Schaden', 'Beschädigt', 'Falsch geliefert', 'Abgelehnt', 'Sonstiges'].some(s => effectiveReturnStatus.includes(s)) && po && !po.isForceClosed) {
       actions.push({
         key: 'return',
         label: 'Rücksendung',
@@ -634,7 +637,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
     }
 
     // PROBLEM BUTTON (Re-inspect: cancel old, create fresh)
-    if (po && !po.isForceClosed && selectedHeader && ['Gebucht', 'Teillieferung', 'Übermenge', 'Schaden', 'Beschädigt', 'Falsch geliefert'].some(s => (selectedHeader.status || '').includes(s))) {
+    if (po && !po.isForceClosed && activeHeader && ['Gebucht', 'Teillieferung', 'Übermenge', 'Schaden', 'Beschädigt', 'Falsch geliefert'].some(s => (activeHeader.status || '').includes(s))) {
       actions.push({
         key: 'problem',
         label: 'Problem',
@@ -646,7 +649,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
     }
 
     // CLOSE BUTTON
-    if (selectedHeader && selectedHeader.status !== 'Abgeschlossen') {
+    if (activeHeader && activeHeader.status !== 'Abgeschlossen') {
       actions.push({
         key: 'close',
         label: 'Schließen',
@@ -664,7 +667,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
       <div className="relative">
         <button
           data-receipt-actions-menu
-          onClick={(e) => { e.stopPropagation(); setShowMobileActionMenu(!showMobileActionMenu); }}
+          onClick={(e) => { e.stopPropagation(); setShowMobileActionMenu(showMobileActionMenu === thisMenuKey ? null : thisMenuKey); }}
           className={`px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all border ${
             showMobileActionMenu
               ? (isDark ? 'bg-slate-700 border-slate-600' : 'bg-slate-100 border-slate-300')
@@ -675,9 +678,9 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
           <span className="hidden sm:inline">Weitere Aktionen</span>
         </button>
 
-        {showMobileActionMenu && createPortal(
+        {showMobileActionMenu === thisMenuKey && createPortal(
           <>
-            <div className="fixed inset-0 z-[9998]" onClick={() => setShowMobileActionMenu(false)} />
+            <div className="fixed inset-0 z-[9998]" onClick={() => setShowMobileActionMenu(null)} />
             <div
               className={`fixed z-[9999] w-64 rounded-xl shadow-2xl border p-1.5 animate-in fade-in zoom-in-95 duration-150 origin-top-right ${
                 isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
@@ -701,7 +704,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                   return (
                     <button
                       key={action.key}
-                      onClick={(e) => { action.onClick(e); setShowMobileActionMenu(false); }}
+                      onClick={(e) => { action.onClick(e); setShowMobileActionMenu(null); }}
                       className={`w-full text-left px-3 py-2.5 text-sm font-medium flex items-center gap-3 transition-colors rounded-lg ${
                         action.variant === 'warning'
                           ? (isDark ? 'text-orange-400 hover:bg-orange-500/10' : 'text-orange-600 hover:bg-orange-50')
@@ -1104,7 +1107,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                        <div className="flex items-center justify-between">
                          <span className="text-xs font-bold uppercase text-slate-500">Aktualisiert</span>
                          <div className="text-xs text-right">
-                           <div className="flex items-center gap-1.5 justify-end"><Calendar size={12}/>{new Date(row.timestamp).toLocaleDateString()}</div>
+                           <div className="flex items-center gap-1.5 justify-end"><Calendar size={12}/>{new Date(row.timestamp).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
                            <div className="flex items-center gap-1.5 justify-end opacity-70 mt-0.5"><User size={12}/>{row.createdByName || 'Unbekannt'}</div>
                          </div>
                        </div>
@@ -1117,7 +1120,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                      </div>
                      {(inspectionState?.canInspect || (row.status && ['Übermenge', 'Zu viel', 'Schaden', 'BeschÃ¤digt', 'Falsch geliefert', 'Abgelehnt', 'Sonstiges'].some(s => row.status.includes(s)))) && (
                        <div className="flex items-center gap-2 pt-3 border-t border-slate-200 dark:border-slate-700" onClick={(e) => e.stopPropagation()}>
-                         {renderActions(inspectionState, linkedPO)}
+                         {renderActions(inspectionState, linkedPO, row, linkedMaster, `mob-${row.batchId}`)}
                        </div>
                      )}
                      <div className="flex justify-end mt-2"><ChevronRight size={18} className="text-slate-400" /></div>
@@ -1200,14 +1203,14 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                       <td className="p-4 text-slate-500">{row.lieferant}</td>
                       <td className="p-4 text-slate-500">
                         <div className="flex flex-col">
-                          <span className="flex items-center gap-1.5"><Calendar size={12}/> {new Date(row.timestamp).toLocaleDateString()}</span>
+                          <span className="flex items-center gap-1.5"><Calendar size={12}/> {new Date(row.timestamp).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
                           <span className="flex items-center gap-1.5 mt-1 text-xs opacity-70"><User size={12}/> {row.createdByName || 'Unbekannt'}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-right text-slate-400 flex items-center justify-end gap-2">
+                      <td className="p-4 text-right text-slate-400 flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                           {/* IN-ROW ACTIONS */}
-                          {renderActions(inspectionState, linkedPO)}
-                          <ChevronRight size={18} />
+                          {renderActions(inspectionState, linkedPO, row, linkedMaster, `list-${row.batchId}`)}
+                          <ChevronRight size={18} className="cursor-pointer" onClick={() => handleOpenDetail(row)} />
                       </td>
                     </tr>
                   )})}
@@ -1409,7 +1412,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                                 />
                              </div>
                              <div className="flex gap-1">
-                                {renderActions(detailInspectionState, linkedPO || undefined)}
+                                {renderActions(detailInspectionState, linkedPO || undefined, selectedHeader || undefined, linkedMaster, 'detail')}
                              </div>
                         </div>
                     </div>
