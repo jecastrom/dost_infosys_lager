@@ -955,7 +955,7 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
 </div>
 
                 <div className={`p-5 border-t flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-                    {/* Left side - Action buttons */}
+                    {/* Left side - Primary action */}
                     <div className="flex items-center gap-2 flex-wrap">
                         {/* PRIMARY ACTION - Prüfen (Most common action) */}
                         {!selectedOrder.isArchived && !isOrderComplete(selectedOrder) && selectedOrder.status !== 'Storniert' && (
@@ -967,7 +967,10 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                                 <span>Prüfen</span>
                             </button>
                         )}
-                        
+                    </div>
+                    
+                    {/* Right side - Overflow menu + Close */}
+                    <div className="flex items-center gap-2">
                         {/* OVERFLOW MENU - Secondary actions */}
                         <div className="relative">
                             <button
@@ -1096,16 +1099,15 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                                 </>,
                                 document.body
                             )}
-                        </div>
-                    </div>
+                       </div>
                     
-                    {/* Right side - Close button */}
                     <button 
                         onClick={() => setSelectedOrder(null)} 
                         className={`px-6 py-2.5 rounded-xl font-bold transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}
                     >
                         Schließen
                     </button>
+                    </div>
                 </div>
             </div>
         </div>,
