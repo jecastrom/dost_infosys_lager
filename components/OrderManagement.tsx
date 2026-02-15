@@ -237,15 +237,7 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; right?: number; left?: number }>({ top: 0, right: 0 });
 
-  // Fixed portal container — prevents scrollbar when portaling menus
-  const menuContainerRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    const el = document.createElement('div');
-    el.style.cssText = 'position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50;';
-    document.body.appendChild(el);
-    menuContainerRef.current = el;
-    return () => { document.body.removeChild(el); };
-  }, []);
+  
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -322,19 +314,19 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
       if (activeMenuId === id) {
           setActiveMenuId(null);
       } else {
-          // All menus use position:fixed portals — use viewport coords only (no scroll offsets)
           const rect = e.currentTarget.getBoundingClientRect();
+          const scrollY = window.scrollY; // Get current scroll position
           
           if (id === 'modal') {
-              // Modal menu: open UPWARD from button, right-aligned
+              // Modal menu: Use fixed positioning logic relative to viewport
               setMenuPos({ 
                   top: rect.top,
                   right: document.body.clientWidth - rect.right
               });
           } else {
-              // Table menu: open downward from button, right-aligned
+              // Table menu: Use ABSOLUTE positioning (Document relative) to prevent layout shifts
               setMenuPos({ 
-                  top: rect.bottom, 
+                  top: rect.bottom + scrollY, 
                   right: document.body.clientWidth - rect.right 
               });
           }
@@ -703,10 +695,11 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                         </div>
                         
                         {/* PORTAL FOR DROPDOWN TO PREVENT CLIPPING */}
-                        {isMenuOpen && menuContainerRef.current && createPortal(
+                        {isMenuOpen && createPortal(
                             <div 
-                                style={{ top: menuPos.top, right: menuPos.right, pointerEvents: 'auto' }}
-                                className={`fixed z-50 w-56 rounded-xl shadow-xl border p-1 animate-in fade-in zoom-in-95 duration-100 origin-top-right ${
+                                style={{ top: menuPos.top, right: menuPos.right }}
+                                // Use 'absolute' for table rows (prevents jumping) and 'fixed' for modal headers
+                                className={`${activeMenuId === 'modal' ? 'fixed' : 'absolute'} z-[9999] w-56 rounded-xl shadow-xl border p-1 animate-in fade-in zoom-in-95 duration-100 origin-top-right ${
                                     isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
                                 }`}
                                 onClick={(e) => e.stopPropagation()}
@@ -733,9 +726,8 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                                         <MenuItem icon={Archive} label="Archivieren" onClick={() => handleArchiveClick(order.id)} />
                                     )}
                                 </div>
-                            </div>,
-                            menuContainerRef.current
-                        )}
+                            </div>, document.body)
+                        }
                     </td>
                   </tr>
                 );
