@@ -975,7 +975,7 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    setActiveMenuId(activeMenuId === 'modal' ? null : 'modal');
+                                    toggleMenu('modal', e);
                                 }}
                                 className={`px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all border ${
                                     activeMenuId === 'modal'
