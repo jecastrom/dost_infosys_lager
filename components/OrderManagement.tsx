@@ -311,8 +311,8 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
           // For modal menu, use left positioning. For table menu, use right positioning
           if (id === 'modal') {
               setMenuPos({ 
-                  top: rect.bottom + scrollTop + 4,
-                  left: rect.left + scrollLeft
+                  top: rect.top + scrollTop - 4,
+                  right: document.body.clientWidth - (rect.right + scrollLeft)
               });
           } else {
               setMenuPos({ 
@@ -998,14 +998,13 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                                     />
                                     {/* Menu */}
                                     <div 
-                                        className={`fixed z-[251] w-64 rounded-xl shadow-2xl border p-2 animate-in fade-in zoom-in-95 duration-150 ${
+                                        className={`fixed z-[251] w-64 rounded-xl shadow-2xl border p-2 animate-in fade-in zoom-in-95 duration-150 origin-bottom-right ${
                                             isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
                                         }`}
                                         style={{
-                                            top: menuPos.top,
-                                            left: menuPos.left,
-                                        }}
-                                    >
+                                            bottom: window.innerHeight - (menuPos.top || 0),
+                                            right: menuPos.right,
+                                        }} >
                                         <div className="flex flex-col gap-1">
                                             {/* Erstellen - Quick Receipt */}
                                             {!selectedOrder.isArchived && !isOrderComplete(selectedOrder) && !selectedOrder.linkedReceiptId && selectedOrder.status !== 'Storniert' && (
