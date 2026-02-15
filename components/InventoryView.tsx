@@ -77,7 +77,7 @@ const InventoryProductCard: React.FC<StockComponentProps> = ({ item, onUpdate, o
             <span className={`px-1.5 py-0.5 rounded border transition-colors ${
               isDark ? 'bg-slate-900 border-slate-700 text-slate-500' : 'bg-[#CACCCE]/20 border-[#CACCCE] text-[#86888A]'
             }`}>#{item.sku}</span>
-            <span className="text-[#86888A]">â€¢</span>
+            <span className="text-[#86888A]">•</span>
             <span className={`uppercase ${isDark ? 'text-slate-500' : 'text-[#86888A]'}`}>{item.system}</span>
             
             {/* Smart Copy Tool */}

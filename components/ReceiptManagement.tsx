@@ -1532,7 +1532,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                                                             {del.lieferscheinNr}
                                                         </div>
                                                         <div className="text-[10px] opacity-60">
-                                                            {new Date(del.date).toLocaleDateString()} â€¢ {del.items.length} Pos.
+                                                            {new Date(del.date).toLocaleDateString()} • {del.items.length} Pos.
                                                         </div>
                                                     </div>
                                                 </button>
@@ -1567,7 +1567,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                     {/* Bottom Row: Metadata */}
                     <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-xs mt-2 pt-2 border-t ${isDark ? 'border-slate-800 text-slate-400' : 'border-slate-100 text-slate-500'}`}>
                         <span className="font-medium flex items-center gap-1.5"><Truck size={12} className="text-[#0077B5]" /> {selectedHeader.lieferant}</span>
-                        <span className="hidden sm:inline opacity-30">â€¢</span>
+                        <span className="hidden sm:inline opacity-30">•</span>
                         <span className="flex items-center gap-1"><Calendar size={12}/> {new Date(selectedHeader.timestamp).toLocaleDateString()}</span>
                         <span className="flex items-center gap-1"><MapPin size={12}/> {selectedHeader.warehouseLocation}</span>
                         <span className="flex items-center gap-1 ml-auto"><User size={12}/> {selectedHeader.createdByName || 'â€“'}</span>
@@ -1885,7 +1885,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                         
                         <div className={`flex-1 overflow-y-auto p-4 space-y-6 ${historieExpanded ? 'block' : 'hidden lg:block'}`}>
                             {relatedComments.length === 0 ? (
-                            <div className="text-center py-10 text-slate-500 text-sm italic">Keine EintrÃ¤ge vorhanden.</div>
+                            <div className="text-center py-10 text-slate-500 text-sm italic">Keine Einträge vorhanden.</div>
                             ) : (
                             relatedComments.map(c => (
                                 <div key={c.id} className="relative pl-6 border-l border-slate-500/20 last:border-0 pb-2">
