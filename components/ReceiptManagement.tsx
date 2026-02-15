@@ -1532,7 +1532,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                                                             {del.lieferscheinNr}
                                                         </div>
                                                         <div className="text-[10px] opacity-60">
-                                                            {new Date(del.date).toLocaleDateString()} • {del.items.length} Pos.
+                                                            {new Date(del.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })} • {del.items.length} Pos.
                                                         </div>
                                                     </div>
                                                 </button>
@@ -1568,7 +1568,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                     <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-xs mt-2 pt-2 border-t ${isDark ? 'border-slate-800 text-slate-400' : 'border-slate-100 text-slate-500'}`}>
                         <span className="font-medium flex items-center gap-1.5"><Truck size={12} className="text-[#0077B5]" /> {selectedHeader.lieferant}</span>
                         <span className="hidden sm:inline opacity-30">•</span>
-                        <span className="flex items-center gap-1"><Calendar size={12}/> {new Date(selectedHeader.timestamp).toLocaleDateString()}</span>
+                        <span className="flex items-center gap-1"><Calendar size={12}/> {new Date(selectedHeader.timestamp).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
                         <span className="flex items-center gap-1"><MapPin size={12}/> {selectedHeader.warehouseLocation}</span>
                         <span className="flex items-center gap-1 ml-auto"><User size={12}/> {selectedHeader.createdByName || 'â€“'}</span>
                     </div>
