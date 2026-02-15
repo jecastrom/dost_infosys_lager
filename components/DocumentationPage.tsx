@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Theme } from '../types';
 import { 
@@ -6,7 +5,7 @@ import {
   GitBranch, Server, FileJson, ArrowRight, CheckCircle2, 
   XCircle, AlertTriangle, Cpu, Box, ShieldCheck, 
   Calculator, Activity, FileText, Truck, LogOut, 
-  Lock, RefreshCw, Scale, Briefcase, Ban, Info, Globe
+  Lock cellulare, RefreshCw, Scale, Briefcase, Ban, Info, Globe
 } from 'lucide-react';
 
 interface DocumentationPageProps {
@@ -139,8 +138,8 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                             <h2 className="text-3xl font-bold mb-2">{lang === 'de' ? 'Systemarchitektur' : 'System Architecture'}</h2>
                             <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                                 {lang === 'de' 
-                                    ? 'Dost Lager ist eine Single-Page-Application (SPA), die als High-Performance Frontend für komplexes Bestandsmanagement dient.' 
-                                    : 'Dost Lager is a Single-Page-Application (SPA) serving as a high-performance frontend for complex inventory management.'}
+                                    ? 'Dost Lager ist eine Single-Page-Application (SPA) und dient als Techniker-Werkzeug für den gesamten Procure-to-Pay-Prozess — von der Bestellanlage über den Wareneingang bis zur Reklamation und Lieferantenbewertung.'
+                                    : 'Dost Lager is a Single-Page-Application (SPA) serving as a technician tool for the entire Procure-to-Pay process — from order creation through goods receipt to complaints management and supplier scoring.'}
                             </p>
                         </div>
 
@@ -149,7 +148,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                 <div className="space-y-4">
                                     <p>{lang === 'de' ? 'Modernste Web-Technologien für maximale Performance und Wartbarkeit.' : 'Modern web technologies for maximum performance and maintainability.'}</p>
                                     <div className="flex flex-wrap gap-2">
-                                        <TechBadge label="React 18" />
+                                        <TechBadge label="React 19" />
                                         <TechBadge label="TypeScript 5" />
                                         <TechBadge label="Tailwind CSS" />
                                         <TechBadge label="Lucide Icons" />
@@ -162,21 +161,21 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                 <div className="space-y-4">
                                     <p>
                                         {lang === 'de' 
-                                            ? 'Die App simuliert ein Backend durch zentrales State-Management in `App.tsx`. Es gibt keine lokale State-Duplizierung.' 
-                                            : 'The app simulates a backend via central state management in `App.tsx`. There is no local state duplication.'}
+                                            ? 'Die App simuliert ein Firestore-Backend durch zentrales State-Management in `App.tsx`. Es gibt keine lokale State-Duplizierung — alle Daten (Bestellungen, Wareneingänge, Tickets, Lagerbestand, Protokolle) leben ausschließlich im globalen State.'
+                                            : 'The app simulates a Firestore backend via central state management in `App.tsx`. There is no local state duplication — all data (Orders, Receipts, Tickets, Inventory, Logs) lives exclusively in global state.'}
                                     </p>
                                     <ul className="space-y-2 text-xs">
                                         <li className="flex items-center gap-2">
                                             <CheckCircle2 size={14} className="text-emerald-500" />
-                                            <span><strong>App.tsx:</strong> {lang === 'de' ? 'Hält den globalen State (Orders, Inventory).' : 'Holds the global state (Orders, Inventory).'}</span>
+                                            <span><strong>App.tsx:</strong> {lang === 'de' ? 'Hält den globalen State (Orders, Inventory, ReceiptMasters, Tickets, StockLogs) und alle Handler.' : 'Holds the global state (Orders, Inventory, ReceiptMasters, Tickets, StockLogs) and all handlers.'}</span>
                                         </li>
                                         <li className="flex items-center gap-2">
                                             <CheckCircle2 size={14} className="text-emerald-500" />
-                                            <span><strong>types.ts:</strong> {lang === 'de' ? 'Definiert die unveränderlichen Schema-Gesetze.' : 'Defines the immutable schema laws.'}</span>
+                                            <span><strong>types.ts:</strong> {lang === 'de' ? 'Definiert alle Interfaces: PurchaseOrder, ReceiptMaster, DeliveryLog, Ticket, StockLog u.v.m. Kein `any` erlaubt.' : 'Defines all interfaces: PurchaseOrder, ReceiptMaster, DeliveryLog, Ticket, StockLog and more. No `any` allowed.'}</span>
                                         </li>
                                         <li className="flex items-center gap-2">
                                             <CheckCircle2 size={14} className="text-emerald-500" />
-                                            <span><strong>data.ts:</strong> {lang === 'de' ? 'Simuliert die Firestore-Datenbank.' : 'Simulates the Firestore database.'}</span>
+                                            <span><strong>data.ts:</strong> {lang === 'de' ? 'Simuliert die Firestore-Datenbank mit FULL_INVENTORY (SharePoint-Import), MOCK_PURCHASE_ORDERS und MOCK_RECEIPT_MASTERS.' : 'Simulates the Firestore database with FULL_INVENTORY (SharePoint import), MOCK_PURCHASE_ORDERS and MOCK_RECEIPT_MASTERS.'}</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -191,6 +190,8 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                 <strong>Mobile First & Touch-Friendly:</strong> {lang === 'de' ? 'Alle interaktiven Elemente sind für die Bedienung auf Tablets im Außeneinsatz optimiert (Min-Height 44px).' : 'All interactive elements are optimized for tablet use in the field (Min-Height 44px).'}
                                 <br/><br/>
                                 <strong>Strict Typing:</strong> {lang === 'de' ? 'Es werden keine `any` Typen verwendet. Jede Datenstruktur (PO, Receipt, Item) ist in `types.ts` streng definiert, um Laufzeitfehler zu verhindern.' : 'No `any` types are used. Every data structure (PO, Receipt, Item) is strictly defined in `types.ts` to prevent runtime errors.'}
+                                <br/><br/>
+                                <strong>3 Themes & Portal-Architektur:</strong> {lang === 'de' ? 'Light, Dark und Soft. Alle Dropdowns/Selects nutzen ReactDOM.createPortal (Z-Index 9999+), damit sie niemals von Eltern-Containern abgeschnitten werden.' : 'Light, Dark, and Soft. All Dropdowns/Selects use ReactDOM.createPortal (Z-Index 9999+) so they are never clipped by parent containers.'}
                             </p>
                         </div>
                     </div>
@@ -203,8 +204,8 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                             <h2 className="text-3xl font-bold mb-2">{lang === 'de' ? 'Daten-Modell' : 'Data Model'}</h2>
                             <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                                 {lang === 'de' 
-                                    ? 'Das Herzstück der Anwendung ist die "Heilige Dreifaltigkeit" des Einkaufs:' 
-                                    : 'The core of the application is the "Holy Trinity" of procurement:'} <br/>
+                                    ? 'Das Herzstück der Anwendung ist die "Heilige Dreifaltigkeit" des Procure-to-Pay-Prozesses:'
+                                    : 'The core of the application is the "Holy Trinity" of the Procure-to-Pay process:'} <br/>
                                 Bestellung &rarr; Empfangs-Master &rarr; Liefer-Log.
                             </p>
                         </div>
@@ -216,11 +217,12 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                 <div className="absolute top-4 right-4 text-xs font-mono opacity-50">01</div>
                                 <div className="mb-3 p-3 rounded-xl bg-blue-500/10 text-blue-500 w-fit"><FileText size={24} /></div>
                                 <h3 className="font-bold text-lg mb-2">PurchaseOrder</h3>
-                                <p className="text-xs opacity-70 mb-4">{lang === 'de' ? 'Der unveränderliche "Plan". Definiert WAS wir wollen und WANN.' : 'The immutable "Plan". Defines WHAT we want and WHEN.'}</p>
+                                <p className="text-xs opacity-70 mb-4">{lang === 'de' ? 'Der unveränderliche "Plan". Definiert WAS wir wollen, von WEM, und WANN. Identitäts-Status (Projekt/Lager) ist ewig.' : 'The immutable "Plan". Defines WHAT we want, from WHOM, and WHEN. Identity status (Projekt/Lager) is eternal.'}</p>
                                 <div className={`text-[10px] font-mono p-2 rounded ${isDark ? 'bg-slate-950' : 'bg-slate-100'}`}>
                                     id: string;<br/>
-                                    status: 'Offen' | ...;<br/>
-                                    items: PurchaseOrderItem[];
+                                    status: PurchaseOrderStatus;<br/>
+                                    items: PurchaseOrderItem[];<br/>
+                                    isForceClosed?: boolean;
                                 </div>
                             </div>
 
@@ -234,7 +236,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                 <div className="absolute top-4 right-4 text-xs font-mono opacity-50">02</div>
                                 <div className="mb-3 p-3 rounded-xl bg-purple-500/10 text-purple-500 w-fit"><Layers size={24} /></div>
                                 <h3 className="font-bold text-lg mb-2">ReceiptMaster</h3>
-                                <p className="text-xs opacity-70 mb-4">{lang === 'de' ? 'Der "Container" für diesen Vorgang. Hält den aktuellen Status.' : 'The "Container" for this process. Holds the current status.'}</p>
+                                <p className="text-xs opacity-70 mb-4">{lang === 'de' ? 'Der "Container" pro Bestellung. Hält den aktuellen Status und sammelt alle Lieferungen als Sub-Array. Genau 1 Master pro PO.' : 'The "Container" per order. Holds the current status and collects all deliveries as a sub-array. Exactly 1 Master per PO.'}</p>
                                 <div className={`text-[10px] font-mono p-2 rounded ${isDark ? 'bg-slate-950' : 'bg-slate-100'}`}>
                                     poId: string;<br/>
                                     status: ReceiptMasterStatus;<br/>
@@ -252,7 +254,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                 <div className="absolute top-4 right-4 text-xs font-mono opacity-50">03</div>
                                 <div className="mb-3 p-3 rounded-xl bg-emerald-500/10 text-emerald-500 w-fit"><Truck size={24} /></div>
                                 <h3 className="font-bold text-lg mb-2">DeliveryLog</h3>
-                                <p className="text-xs opacity-70 mb-4">{lang === 'de' ? 'Das physische Event. Ein LKW kommt an. Kann mehrfach pro PO vorkommen.' : 'The physical event. A truck arrives. Can occur multiple times per PO.'}</p>
+                                <p className="text-xs opacity-70 mb-4">{lang === 'de' ? 'Das physische Event. Ein LKW kommt an. Kann mehrfach pro PO vorkommen (Teillieferungen). Enthält Snapshot-Felder (offen/zuViel) für historische Nachvollziehbarkeit.' : 'The physical event. A truck arrives. Can occur multiple times per PO (partial deliveries). Contains snapshot fields (offen/zuViel) for historical traceability.'}</p>
                                 <div className={`text-[10px] font-mono p-2 rounded ${isDark ? 'bg-slate-950' : 'bg-slate-100'}`}>
                                     date: string;<br/>
                                     lieferscheinNr: string;<br/>
@@ -266,17 +268,17 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                             <DocCard title="Eternal Identity (Status)" icon={<ShieldCheck size={24}/>}>
                                 <p className="mb-4">
                                     {lang === 'de' 
-                                        ? 'Eine Bestellung wird mit einem Zweck geboren und behält diesen für immer. Dieser "Eternal Status" bestimmt das Verhalten im gesamten System.'
-                                        : 'An order is born with a purpose and keeps it forever. This "Eternal Status" determines behavior throughout the system.'}
+                                        ? 'Eine Bestellung wird mit einem Zweck geboren und behält diesen für immer. Dieser "Eternal Status" bestimmt das Verhalten im gesamten System. Guard Clauses in App.tsx schützen ihn bei jeder Buchung.'
+                                        : 'An order is born with a purpose and keeps it forever. This "Eternal Status" determines behavior throughout the system. Guard clauses in App.tsx protect it during every booking.'}
                                 </p>
                                 <div className="space-y-3">
                                     <div className={`p-3 rounded-xl border flex items-center gap-3 ${isDark ? 'bg-blue-500/10 border-blue-500/20 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
                                         <div className="font-bold uppercase text-xs tracking-wider">Projekt</div>
-                                        <div className="text-xs opacity-80">{lang === 'de' ? 'Ware ist reserviert. Geht nicht in den freien Bestand. E-Mail Trigger bei Ankunft.' : 'Goods are reserved. Does not enter free stock. Email trigger on arrival.'}</div>
+                                        <div className="text-xs opacity-80">{lang === 'de' ? 'Ware ist reserviert. Geht nicht in den freien Bestand. Automatische E-Mail an das Technik-Team bei Status "Gebucht". Stock-Log-Kontext: po-project.' : 'Goods are reserved. Does not enter free stock. Automatic email to the technician team on "Gebucht" status. Stock log context: po-project.'}</div>
                                     </div>
                                     <div className={`p-3 rounded-xl border flex items-center gap-3 ${isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
                                         <div className="font-bold uppercase text-xs tracking-wider">Lager</div>
-                                        <div className="text-xs opacity-80">{lang === 'de' ? 'Standard. Ware erhöht den `stockLevel` im Inventar sofort.' : 'Standard. Goods increase the `stockLevel` in inventory immediately.'}</div>
+                                        <div className="text-xs opacity-80">{lang === 'de' ? 'Standard. Ware erhöht den stockLevel im Inventar sofort bei Buchung. Stock-Log-Kontext: po-normal.' : 'Standard. Goods increase the stockLevel in inventory immediately upon booking. Stock log context: po-normal.'}</div>
                                     </div>
                                 </div>
                             </DocCard>
@@ -313,8 +315,8 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                             <h2 className="text-3xl font-bold mb-2">{lang === 'de' ? 'Geschäftslogik & Mathe' : 'Business Logic & Math'}</h2>
                             <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                                 {lang === 'de' 
-                                    ? 'Die Regeln für Warenbewegungen, Korrekturen und Bestandsberechnung.'
-                                    : 'Rules for goods movements, corrections, and inventory calculation.'}
+                                    ? 'Die Regeln für Warenbewegungen, Korrekturen, Bestandsberechnung und die drei Empfangsmodi (Standard, Rücksendung, Problem).'
+                                    : 'Rules for goods movements, corrections, inventory calculation, and the three receipt modes (Standard, Return, Problem).'}
                             </p>
                         </div>
 
@@ -325,8 +327,8 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                     <div className="flex-1 space-y-4">
                                         <p>
                                             {lang === 'de' 
-                                                ? 'Im Gegensatz zu einfachen Systemen, die nur "Geliefert" kennen, unterscheidet Dost Lager strikt zwischen physischer Anlieferung und buchbarem Bestand.'
-                                                : 'Unlike simple systems that only know "Delivered", Dost Lager strictly distinguishes between physical delivery and bookable stock.'}
+                                                ? 'Im Gegensatz zu einfachen Systemen, die nur "Geliefert" kennen, unterscheidet Dost Lager strikt zwischen physischer Anlieferung und buchbarem Bestand. Pro Zeile wird qtyReceived, qtyRejected (Schaden + Falsch), und qtyAccepted getrennt erfasst.'
+                                                : 'Unlike simple systems that only know "Delivered", Dost Lager strictly distinguishes between physical delivery and bookable stock. Per line item, qtyReceived, qtyRejected (Damaged + Wrong), and qtyAccepted are tracked separately.'}
                                         </p>
                                         <ul className="space-y-2 text-sm opacity-80">
                                             <li className="flex items-center gap-2"><Truck size={14}/> <strong>Received:</strong> {lang === 'de' ? 'Was der LKW abgeladen hat.' : 'What the truck unloaded.'}</li>
@@ -345,8 +347,8 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                             <DocCard title={lang === 'de' ? 'B. Rücksendungen (Negative Transactions)' : 'B. Returns (Negative Transactions)'} icon={<LogOut size={24}/>}>
                                 <p className="mb-4">
                                     {lang === 'de' 
-                                        ? 'Wie korrigiert man eine Falschlieferung, die erst später bemerkt wurde? Durch eine "Negative Transaktion". Wir löschen niemals alte Belege ("The Ledger Principle"). Stattdessen fügen wir einen Korrektur-Beleg hinzu.'
-                                        : 'How to correct a wrong delivery noticed later? Via a "Negative Transaction". We never delete old receipts ("The Ledger Principle"). Instead, we add a correction receipt.'}
+                                        ? 'Wie korrigiert man eine Falschlieferung, die erst später bemerkt wurde? Durch eine "Negative Transaktion". Wir löschen niemals alte Belege ("The Ledger Principle"). Es gibt zwei Wege: Rücksendung (eigener Modus im Wareneingang, generiert RÜCK-Lieferschein) oder Problem-Modus (storniert die letzte Lieferung komplett und erstellt eine frische Inspektion).'
+                                        : 'How to correct a wrong delivery noticed later? Via a "Negative Transaction". We never delete old receipts ("The Ledger Principle"). Two paths exist: Return mode (dedicated receipt mode, generates RÜCK-delivery note) or Problem mode (cancels the last delivery entirely and creates a fresh inspection).'}
                                 </p>
                                 <div className={`p-4 rounded-xl border flex items-center justify-between ${isDark ? 'bg-orange-900/10 border-orange-500/20' : 'bg-orange-50 border-orange-200'}`}>
                                     <div className="font-mono text-sm">
@@ -365,8 +367,8 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                 <div className="space-y-4">
                                     <p>
                                         {lang === 'de' 
-                                            ? 'Manchmal liefert ein Lieferant weniger als bestellt und wird den Rest nicht mehr nachliefern. Mathematisch ist die Bestellung "Offen", aber organisatorisch ist sie "Erledigt".'
-                                            : 'Sometimes a supplier delivers less than ordered and will not deliver the rest. Mathematically, the order is "Open", but organizationally it is "Done".'}
+                                            ? 'Manchmal liefert ein Lieferant weniger als bestellt und wird den Rest nicht mehr nachliefern. Mathematisch ist die Bestellung "Offen", aber organisatorisch ist sie "Erledigt". Es gibt zwei Varianten: Force Close (im Wareneingang, setzt isForceClosed=true) und Admin Close (isAdminClose, erzeugt eine Null-Mengen-Buchung mit ABSCHLUSS-Lieferschein).'
+                                            : 'Sometimes a supplier delivers less than ordered and will not deliver the rest. Mathematically, the order is "Open", but organizationally it is "Done". Two variants exist: Force Close (in goods receipt, sets isForceClosed=true) and Admin Close (isAdminClose, creates a zero-quantity booking with ABSCHLUSS delivery note).'}
                                     </p>
                                     <div className="flex items-center gap-4">
                                         <div className={`p-4 rounded-xl border flex-1 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-200'}`}>
@@ -394,8 +396,8 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                             <h2 className="text-3xl font-bold mb-2">Status System</h2>
                             <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                                 {lang === 'de' 
-                                    ? 'Die visuelle Sprache der Anwendung. Jede Farbe und jedes Badge hat eine feste Bedeutung.'
-                                    : 'The visual language of the application. Every color and badge has a fixed meaning.'}
+                                    ? 'Die visuelle Sprache der Anwendung. Jede Farbe und jedes Badge hat eine feste Bedeutung. Das System kennt 3 Badge-Ebenen: Identität (ewig), Lebenszyklus (berechnet) und Transaktion (prozessual).'
+                                    : 'The visual language of the application. Every color and badge has a fixed meaning. The system uses 3 badge layers: Identity (eternal), Lifecycle (calculated), and Transaction (process-driven).'}
                             </p>
                         </div>
 
@@ -425,15 +427,15 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     <div className={`p-3 rounded-xl border text-center ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                                         <div className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider mb-2 ${isDark ? 'text-slate-400 border-slate-700' : 'text-slate-600 border-slate-300 bg-white'}`}>OFFEN</div>
-                                        <div className="text-xs opacity-60">{lang === 'de' ? '0% Geliefert' : '0% Delivered'}</div>
+                                        <div className="text-xs opacity-60">{lang === 'de' ? '0% geliefert — Bestellt aber noch kein Eingang' : '0% delivered — Ordered but no receipt yet'}</div>
                                     </div>
                                     <div className={`p-3 rounded-xl border text-center ${isDark ? 'bg-amber-900/10 border-amber-500/20' : 'bg-amber-50 border-amber-200'}`}>
                                         <div className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider mb-2 ${isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>TEILLIEFERUNG</div>
-                                        <div className="text-xs opacity-60">{lang === 'de' ? '1-99% Geliefert' : '1-99% Delivered'}</div>
+                                        <div className="text-xs opacity-60">{lang === 'de' ? '1-99% geliefert — Mindestens 1 Lieferung eingetroffen' : '1-99% delivered — At least 1 delivery received'}</div>
                                     </div>
                                     <div className={`p-3 rounded-xl border text-center ${isDark ? 'bg-emerald-900/10 border-emerald-500/20' : 'bg-emerald-50 border-emerald-200'}`}>
                                         <div className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider mb-2 ${isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>ERLEDIGT</div>
-                                        <div className="text-xs opacity-60">{lang === 'de' ? '100% oder Force Close' : '100% or Force Close'}</div>
+                                        <div className="text-xs opacity-60">{lang === 'de' ? '100% geliefert, Force Close oder Admin Close' : '100% delivered, Force Close, or Admin Close'}</div>
                                     </div>
                                 </div>
                             </DocCard>
@@ -444,15 +446,15 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({ theme, onB
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
                                         <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${isDark ? 'bg-[#6264A7]/20 text-[#9ea0e6] border-[#6264A7]/40' : 'bg-[#6264A7]/10 text-[#6264A7] border-[#6264A7]/20'}`}>In Prüfung</span>
-                                        <span className="text-xs opacity-50 text-right">{lang === 'de' ? 'Ware ist physisch da, aber noch nicht im Bestand gebucht.' : 'Goods physically arrived, but not yet booked to stock.'}</span>
+                                        <span className="text-xs opacity-50 text-right">{lang === 'de' ? 'Ware physisch da, noch nicht im Bestand. Automatischer Initialstatus bei Erstbuchung.' : 'Goods physically arrived, not yet booked to stock. Automatic initial status on first booking.'}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>Gebucht</span>
-                                        <span className="text-xs opacity-50 text-right">{lang === 'de' ? 'Vorgang abgeschlossen. Bestand wurde aktualisiert.' : 'Process complete. Inventory has been updated.'}</span>
+                                        <span className="text-xs opacity-50 text-right">{lang === 'de' ? 'Vorgang abgeschlossen. Bestand wurde aktualisiert (Lager) oder reserviert (Projekt).' : 'Process complete. Inventory updated (Lager) or reserved (Projekt).'}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${isDark ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-red-50 text-red-600 border-red-200'}`}>Schaden</span>
-                                        <span className="text-xs opacity-50 text-right">{lang === 'de' ? 'Ware wurde abgelehnt. Automatische Ticket-Erstellung.' : 'Goods rejected. Automatic ticket creation.'}</span>
+                                        <span className="text-xs opacity-50 text-right">{lang === 'de' ? 'Ware beschädigt. Automatische Ticket-Erstellung je nach Ticket-Konfiguration (Einstellungen).' : 'Goods damaged. Automatic ticket creation based on ticket configuration (Settings).'}</span>
                                     </div>
                                 </div>
                             </DocCard>
