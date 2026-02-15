@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { 
   Plus, Send, User, X, AlertCircle, CheckCircle2, Unlock, Lock, 
   MessageSquare, MoreVertical, Calendar, Truck, FileText, Search,
-  Paperclip, Clock, ChevronDown, ChevronUp, ChevronRight
+  Paperclip, Clock, ChevronDown, ChevronUp, ChevronRight, Mail, Phone
 } from 'lucide-react';
 import { Ticket, TicketPriority, Theme, TicketMessage, ReceiptHeader, PurchaseOrder } from '../types';
 
@@ -537,7 +537,7 @@ export const TicketSystem: React.FC<TicketSystemProps> = ({
                         </div>
 
                         {/* Chat Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {(Object.entries(groupedMessages) as [string, TicketMessage[]][]).map(([dateKey, messages]) => {
                                 const isCollapsed = collapsedDates.has(dateKey);
                                 
@@ -590,34 +590,22 @@ export const TicketSystem: React.FC<TicketSystemProps> = ({
                                                     }
 
                                                     return (
-                                                        <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                                            <div className="flex items-end gap-2 max-w-[85%]">
-                                                                {!isMe && (
-                                                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border ${isDark ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-white border-slate-200 text-slate-600'}`}>
-                                                                        <User size={12} />
-                                                                    </div>
-                                                                )}
-                                                                
-                                                                <div className={`px-3 py-2 rounded-xl text-sm leading-snug whitespace-pre-wrap ${
-                                                                    isMe 
-                                                                    ? 'bg-[#0077B5] text-white rounded-tr-none' 
-                                                                    : (isDark ? 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none' : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none')
-                                                                }`}>
-                                                                    {msg.label && (
-                                                                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider mb-1 ${isMe ? 'text-blue-200' : (isDark ? 'text-slate-400' : 'text-slate-400')}`}>
-                                                                            {msg.label === 'email' && <><MessageSquare size={9} /> Email</>}
-                                                                            {msg.label === 'call' && <><Clock size={9} /> Tel.</>}
-                                                                        </span>
-                                                                    )}
-                                                                    {msg.label && msg.label !== 'note' && <br />}
+                                                        <div key={msg.id} className="relative pl-6 border-l border-slate-500/20 last:border-0 pb-2">
+                                                            <div className={`absolute -left-3 top-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                                                                isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
+                                                            }`}>
+                                                                {msg.label === 'email' ? <Mail size={12} className="text-blue-500" />
+                                                                : msg.label === 'call' ? <Phone size={12} className="text-purple-500" />
+                                                                : <MessageSquare size={12} className="text-amber-500" />}
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <div className="flex justify-between items-start text-xs">
+                                                                    <span className={`font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{msg.author}</span>
+                                                                    <span className="text-slate-500">{new Date(msg.timestamp).toLocaleString()}</span>
+                                                                </div>
+                                                                <div className={`p-3 rounded-xl text-sm whitespace-pre-wrap ${isDark ? 'bg-slate-800' : 'bg-slate-50'}`}>
                                                                     {msg.text}
                                                                 </div>
-                                                            </div>
-                                                            
-                                                            <div className={`flex items-center gap-1 mt-0.5 text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'} ${isMe ? 'mr-1' : 'ml-8'}`}>
-                                                                <span className="font-bold">{msg.author}</span>
-                                                                <span>â€¢</span>
-                                                                <span className="font-mono">{new Date(msg.timestamp).toLocaleString(undefined, { hour: '2-digit', minute:'2-digit' })}</span>
                                                             </div>
                                                         </div>
                                                     );
@@ -763,7 +751,7 @@ export const TicketSystem: React.FC<TicketSystemProps> = ({
                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${isDark ? 'bg-[#1e293b] border-slate-700 text-slate-400' : 'bg-white border-slate-200 text-slate-500'}`}>{getDateLabel(dateKey)}</span>
                                     <div className={`h-px flex-1 ${isDark ? 'bg-slate-800' : 'bg-slate-200'}`} />
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-4">
                                     {msgs.map(msg => {
                                         const isSystem = msg.type === 'system' || msg.author === 'System';
                                         const isMe = msg.type === 'user' && msg.author !== 'System';
@@ -774,13 +762,16 @@ export const TicketSystem: React.FC<TicketSystemProps> = ({
                                             </div>
                                         );
                                         return (
-                                            <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                                <div className="flex items-end gap-2 max-w-[85%]">
-                                                    {!isMe && <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border ${isDark ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-white border-slate-200 text-slate-600'}`}><User size={12} /></div>}
-                                                    <div className={`px-3 py-2 rounded-xl text-sm leading-snug whitespace-pre-wrap ${isMe ? 'bg-[#0077B5] text-white rounded-tr-none' : (isDark ? 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none' : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none')}`}>{msg.text}</div>
+                                            <div key={msg.id} className="relative pl-6 border-l border-slate-500/20 last:border-0 pb-2">
+                                                <div className={`absolute -left-3 top-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+                                                    {msg.label === 'email' ? <Mail size={12} className="text-blue-500" /> : msg.label === 'call' ? <Phone size={12} className="text-purple-500" /> : <MessageSquare size={12} className="text-amber-500" />}
                                                 </div>
-                                                <div className={`flex items-center gap-1 mt-0.5 text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'} ${isMe ? 'mr-1' : 'ml-8'}`}>
-                                                    <span className="font-bold">{msg.author}</span><span>•</span><span className="font-mono">{new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
+                                                <div className="space-y-1">
+                                                    <div className="flex justify-between items-start text-xs">
+                                                        <span className={`font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{msg.author}</span>
+                                                        <span className="text-slate-500">{new Date(msg.timestamp).toLocaleString()}</span>
+                                                    </div>
+                                                    <div className={`p-3 rounded-xl text-sm whitespace-pre-wrap ${isDark ? 'bg-slate-800' : 'bg-slate-50'}`}>{msg.text}</div>
                                                 </div>
                                             </div>
                                         );
