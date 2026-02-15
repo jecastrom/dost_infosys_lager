@@ -450,13 +450,18 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
   }, [cart, linkedPoId]);
 
   const calculateReceiptStatus = (currentCart: CartItem[], poId: string | null) => {
+    // 1. All rejected → Abgelehnt
     const allRejected = currentCart.length > 0 && currentCart.every(c => c.qtyRejected === c.qtyReceived && c.qtyReceived > 0);
     if (allRejected) return 'Abgelehnt';
+
+    // 2. Quality issues take HIGHEST priority
     const hasDamage = currentCart.some(c => c.qtyDamaged > 0);
     const hasWrong = currentCart.some(c => c.qtyWrong > 0);
     if (hasDamage && hasWrong) return 'Schaden + Falsch';
     if (hasDamage) return 'Schaden';
     if (hasWrong) return 'Falsch geliefert';
+
+    // 3. Quantity checks (only if PO-linked)
     if (poId) {
       const po = purchaseOrders?.find(p => p.id === poId);
       if (po) {
@@ -470,22 +475,13 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
           if (total < poItem.quantityExpected) anyUnder = true;
           if (total > poItem.quantityExpected) anyOver = true;
         }
-        // Quality issues take priority
-        const hasDamage = currentCart.some(c => c.qtyDamaged > 0);
-        const hasWrong = currentCart.some(c => c.qtyWrong > 0);
-        if (hasDamage && hasWrong) return 'Schaden + Falsch';
-        if (hasDamage) return 'Schaden';
-        if (hasWrong) return 'Falsch geliefert';
         if (anyOver) return 'Übermenge';
-        if (anyUnder || currentCart.some(c => c.qtyRejected > 0)) return 'Teillieferung';
+        if (anyUnder) return 'Teillieferung';
         return 'Gebucht';
       }
     }
-    const anyDamage = currentCart.some(c => c.qtyDamaged > 0);
-    const anyWrong = currentCart.some(c => c.qtyWrong > 0);
-    if (anyDamage && anyWrong) return 'Schaden + Falsch';
-    if (anyDamage) return 'Schaden';
-    if (anyWrong) return 'Falsch geliefert';
+
+    // 4. Fallback (no PO)
     return currentCart.some(c => c.qtyRejected > 0) ? 'Teillieferung' : 'Gebucht';
   };
 
