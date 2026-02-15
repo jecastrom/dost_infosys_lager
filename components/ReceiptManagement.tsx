@@ -107,6 +107,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
 
   // Mobile: Historie & Notizen collapse state
   const [historieExpanded, setHistorieExpanded] = useState(false);
+  const [statusHistoryExpanded, setStatusHistoryExpanded] = useState(false);
 
   // Return Modal State
   const [returnModal, setReturnModal] = useState<{ poId: string; quantity: number; reason: string; carrier: string; trackingId: string } | null>(null);
@@ -115,6 +116,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   // Reset dropdown when changing selection
   useEffect(() => {
       setShowDeliveryList(false);
+      setStatusHistoryExpanded(false);
   }, [selectedBatchId]);
 
   // -- Detail View Hooks --
@@ -335,6 +337,47 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
       const hasRemaining = linkedPO.items.some(i => i.quantityReceived < i.quantityExpected);
       return hasRemaining;
   }, [linkedPO]);
+
+  const statusHistory = useMemo(() => {
+      if (!linkedMaster) return [];
+      const sorted = [...linkedMaster.deliveries]
+          .filter(d => d.lieferscheinNr && d.lieferscheinNr !== 'Ausstehend' && d.lieferscheinNr !== 'Pending')
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      if (sorted.length === 0) return [];
+      const entries: Array<{ date: string; from: string; to: string; by: string; reason: string }> = [];
+      let prevStatus = 'Erstellt';
+      sorted.forEach(del => {
+          let newStatus: string;
+          if (del.isStorniert) {
+              newStatus = 'Storniert';
+          } else {
+              const hasDamage = del.items.some(i => i.damageFlag);
+              const hasRejected = del.items.some(i => (i.quantityRejected || 0) > 0 && (i.rejectionReason === 'Wrong'));
+              const hasZuViel = del.items.some(i => (i.zuViel || 0) > 0);
+              const hasOffen = del.items.some(i => (i.offen || 0) > 0);
+              if (hasDamage && hasRejected) newStatus = 'Schaden + Falsch';
+              else if (hasDamage) newStatus = 'Schaden';
+              else if (hasRejected) newStatus = 'Falsch geliefert';
+              else if (hasZuViel) newStatus = 'Übermenge';
+              else if (hasOffen) newStatus = 'Teillieferung';
+              else newStatus = 'Gebucht';
+          }
+          const header = headers.find(h => h.lieferscheinNr === del.lieferscheinNr && h.bestellNr === linkedMaster.poId);
+          entries.push({
+              date: del.date,
+              from: prevStatus,
+              to: newStatus,
+              by: header?.createdByName || 'System',
+              reason: del.isStorniert ? 'Buchung storniert' : `LS: ${del.lieferscheinNr}`
+          });
+          prevStatus = newStatus;
+      });
+      const masterStatus = String(linkedMaster.status || '');
+      if (entries.length > 0 && masterStatus && masterStatus !== entries[entries.length - 1].to && masterStatus !== '-') {
+          entries.push({ date: new Date().toISOString(), from: entries[entries.length - 1].to, to: masterStatus, by: 'System', reason: 'Statusaktualisierung' });
+      }
+      return entries.reverse();
+  }, [linkedMaster, headers]);
 
   const visibleDeliveries = useMemo(() => {
       return linkedMaster ? linkedMaster.deliveries.filter(d => d.lieferscheinNr !== 'Ausstehend') : [];
@@ -1540,10 +1583,47 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                             <StatusDescription
                                 status={linkedMaster.status}
                                 theme={theme}
-                                onAction={linkedPO ? () => onReceiveGoods(linkedPO.id) : undefined}
-                                showActionButton={canReceiveMore}
+                                showActionButton={false}
                             />
                         )}
+
+                        {/* STATUS HISTORY LOG - Collapsible */}
+                        <div className={`rounded-2xl border overflow-hidden ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+                            <button
+                                onClick={() => setStatusHistoryExpanded(!statusHistoryExpanded)}
+                                className={`w-full px-4 py-3 flex items-center justify-between text-sm font-bold transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-50 text-slate-600'}`}
+                            >
+                                <span className="flex items-center gap-2"><Clock size={14} className="text-slate-400" /> Statusverlauf</span>
+                                {statusHistoryExpanded ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                            </button>
+                            <div style={{ maxHeight: statusHistoryExpanded ? `${Math.max(statusHistory.length * 80 + 16, 60)}px` : '0px', transition: 'max-height 200ms ease', overflow: 'hidden' }}>
+                                <div className={`border-t ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+                                    {statusHistory.length === 0 ? (
+                                        <div className={`px-4 py-6 text-center text-sm ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Noch kein Verlauf vorhanden.</div>
+                                    ) : (
+                                        <div className="divide-y divide-slate-500/10">
+                                            {statusHistory.map((entry, idx) => (
+                                                <div key={idx} className="px-4 py-3 flex flex-col gap-1">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <span className={`text-[11px] font-mono shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                            {new Date(entry.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}{' '}
+                                                            {new Date(entry.date).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+                                                        <span className={`text-[10px] shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{entry.by}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-sm">
+                                                        <span className={`font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{entry.from}</span>
+                                                        <span className={`${isDark ? 'text-slate-500' : 'text-slate-400'}`}>→</span>
+                                                        <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{entry.to}</span>
+                                                    </div>
+                                                    {entry.reason && <div className={`text-xs leading-snug break-words ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{entry.reason}</div>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
 
                         {linkedPO && linkedMaster ? (
                             <>
