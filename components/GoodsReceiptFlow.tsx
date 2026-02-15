@@ -481,11 +481,11 @@ export const GoodsReceiptFlow: React.FC<GoodsReceiptFlowProps> = ({
         return 'Gebucht';
       }
     }
-    const hasDamage = currentCart.some(c => c.qtyDamaged > 0);
-    const hasWrong = currentCart.some(c => c.qtyWrong > 0);
-    if (hasDamage && hasWrong) return 'Schaden + Falsch';
-    if (hasDamage) return 'Schaden';
-    if (hasWrong) return 'Falsch geliefert';
+    const anyDamage = currentCart.some(c => c.qtyDamaged > 0);
+    const anyWrong = currentCart.some(c => c.qtyWrong > 0);
+    if (anyDamage && anyWrong) return 'Schaden + Falsch';
+    if (anyDamage) return 'Schaden';
+    if (anyWrong) return 'Falsch geliefert';
     return currentCart.some(c => c.qtyRejected > 0) ? 'Teillieferung' : 'Gebucht';
   };
 
