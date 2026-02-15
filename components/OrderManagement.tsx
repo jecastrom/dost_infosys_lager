@@ -99,14 +99,19 @@ const OrderStatusBadges = ({ order, linkedReceipt, theme }: { order: PurchaseOrd
                 Offen
             </span>
         );
-    } else if (totalReceived > 0 && totalReceived < totalOrdered) {
-        badges.push(
-            <span key="life-partial" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${
-                isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'
-            }`}>
-                Teillieferung
-            </span>
-        );
+   } else if (totalReceived > 0 && totalReceived < totalOrdered) {
+        // Only show Teillieferung if no quality issue badge will appear
+        const receiptStatus = linkedReceipt?.status as string || '';
+        const hasQualityStatus = ['Schaden', 'Beschädigt', 'Falsch geliefert', 'Schaden + Falsch', 'Abgelehnt'].includes(receiptStatus);
+        if (!hasQualityStatus) {
+            badges.push(
+                <span key="life-partial" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${
+                    isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'
+                }`}>
+                    Teillieferung
+                </span>
+            );
+        }
     } else if (totalReceived === totalOrdered) {
         badges.push(
             <span key="life-done" className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${
