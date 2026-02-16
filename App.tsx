@@ -1240,6 +1240,7 @@ export default function App() {
                     onSetEnableSmartImport={handleSetEnableSmartImport}
                     ticketConfig={ticketConfig}
                     onSetTicketConfig={handleSetTicketConfig}
+                    auditTrail={auditTrail}
                   />
                 )}
 

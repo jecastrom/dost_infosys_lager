@@ -1,7 +1,7 @@
 
 
 import React, { useRef, useState } from 'react';
-import { Theme, StockItem, RawGermanItem, ActiveModule } from '../types';
+import { Theme, StockItem, RawGermanItem, ActiveModule, AuditEntry } from '../types';
 import { Book, ChevronRight, Moon, Sun, Monitor, Shield, Info, Upload, Trash2, Database, AlertCircle, CheckCircle2, Users, Sidebar, LayoutPanelLeft, List, LayoutGrid, Bug, Calendar, Ticket, ToggleLeft, ToggleRight, Ban, AlertTriangle, PlusCircle, ChevronDown, ChevronUp, Globe, Eye, Sparkles } from 'lucide-react';
 
 export interface TicketConfig {
@@ -29,6 +29,7 @@ interface SettingsPageProps {
   onSetEnableSmartImport: (enabled: boolean) => void;
   ticketConfig: TicketConfig;
   onSetTicketConfig: (config: TicketConfig) => void;
+  auditTrail?: AuditEntry[];
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ 
@@ -47,11 +48,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   enableSmartImport,
   onSetEnableSmartImport,
   ticketConfig,
-  onSetTicketConfig
+  onSetTicketConfig,
+  auditTrail = []
 }) => {
   const isDark = theme === 'dark';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isTicketConfigOpen, setIsTicketConfigOpen] = useState(false);
+  const [isAuditOpen, setIsAuditOpen] = useState(false);
 
   // Helper to parse ASP.NET AJAX Date format "/Date(1732871995000)/"
   const parseAspDate = (dateStr: string | null): number | undefined => {
@@ -478,6 +481,59 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             </button>
           </div>
         )}
+      </div>
+
+      {/* AUDIT TRAIL SECTION */}
+      <div className={`rounded-2xl border overflow-hidden mb-8 ${isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
+        <button
+          onClick={() => setIsAuditOpen(!isAuditOpen)}
+          className={`w-full flex items-center justify-between px-6 py-4 transition-colors ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'} ${isAuditOpen ? 'border-b ' + (isDark ? 'border-slate-800' : 'border-slate-200') : ''}`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
+              <Shield size={20} />
+            </div>
+            <div className="text-left">
+              <div className={`font-bold text-sm ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>Audit Trail</div>
+              <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                {isAuditOpen ? 'Letzte 50 Ereignisse' : `${auditTrail.length} Ereignisse protokolliert`}
+              </div>
+            </div>
+          </div>
+          {isAuditOpen ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
+        </button>
+
+        <div style={{ maxHeight: isAuditOpen ? `${Math.max(auditTrail.slice(0, 50).length * 72 + 16, 60)}px` : '0px', transition: 'max-height 200ms ease', overflow: 'hidden' }}>
+          <div className="overflow-y-auto" style={{ maxHeight: '400px' }}>
+            {auditTrail.length === 0 ? (
+              <div className={`px-6 py-10 text-center text-sm italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                No audit events yet
+              </div>
+            ) : (
+              auditTrail.slice(0, 50).map(entry => (
+                <div key={entry.id} className={`px-6 py-3 border-b last:border-0 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                    <span className={`font-bold text-sm ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{entry.event}</span>
+                    <span className={`text-[10px] font-mono shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                      {new Date(entry.timestamp).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </span>
+                  </div>
+                  <div className={`mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    <span>👤 {entry.user}</span>
+                    <span>🌐 {entry.ip}</span>
+                    {entry.details.po && <span>📋 PO: {entry.details.po}</span>}
+                    {entry.details.receiptId && <span>📦 {entry.details.receiptId}</span>}
+                    {entry.details.oldStatus && entry.details.newStatus && <span>{entry.details.oldStatus} → {entry.details.newStatus}</span>}
+                    {entry.details.subject && <span>🎫 {entry.details.subject}</span>}
+                    {entry.details.reason && <span>💬 {entry.details.reason}</span>}
+                    {entry.details.quantity != null && <span>📊 Menge: {entry.details.quantity}</span>}
+                    {entry.details.device && <span className="truncate max-w-[200px]">🖥️ {entry.details.device}</span>}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       <div className={`rounded-2xl border overflow-hidden mb-8 ${isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
