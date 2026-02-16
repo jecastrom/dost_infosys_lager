@@ -169,6 +169,15 @@ export interface Ticket {
 
 // --- Stock Logging Types ---
 
+export interface AuditEntry {
+  id: string;
+  event: string;
+  user: string;
+  timestamp: number;
+  ip: string;
+  details: Record<string, any>;
+}
+
 export interface StockLog {
   id: string;
   timestamp: Date;

@@ -6,7 +6,7 @@ import {
 } from './data';
 import { 
   StockItem, ReceiptHeader, ReceiptItem, ReceiptComment, ViewMode, Theme, 
-  ActiveModule, PurchaseOrder, ReceiptMaster, Ticket, DeliveryLog, StockLog, ReceiptMasterStatus 
+  ActiveModule, PurchaseOrder, ReceiptMaster, Ticket, DeliveryLog, StockLog, ReceiptMasterStatus, AuditEntry 
 } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -161,6 +161,29 @@ export default function App() {
   
   // Logging State
   const [stockLogs, setStockLogs] = useState<StockLog[]>([]);
+  const [auditTrail, setAuditTrail] = useState<AuditEntry[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('auditTrail');
+      if (saved) return JSON.parse(saved);
+    }
+    return [];
+  });
+
+  const addAudit = (event: string, details: Record<string, any>) => {
+    const entry: AuditEntry = {
+      id: crypto.randomUUID(),
+      event,
+      user: 'Admin User',
+      timestamp: Date.now(),
+      ip: '192.168.1.xxx',
+      details
+    };
+    setAuditTrail(prev => {
+      const next = [entry, ...prev].slice(0, 500);
+      localStorage.setItem('auditTrail', JSON.stringify(next));
+      return next;
+    });
+  };
   
   // Transient State
   const [searchTerm, setSearchTerm] = useState('');
@@ -171,6 +194,10 @@ export default function App() {
   // Toggle Theme
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
   
+  useEffect(() => {
+    addAudit('User Login', { device: navigator.userAgent.substring(0, 80), screen: `${window.innerWidth}x${window.innerHeight}` });
+  }, []);
+
   useEffect(() => {
     // Clean up class list
     document.documentElement.classList.remove('dark', 'soft');
@@ -264,6 +291,8 @@ export default function App() {
   };
 
   const handleReceiptStatusUpdate = (batchId: string, newStatus: string) => {
+    const oldHeader = receiptHeaders.find(h => h.batchId === batchId);
+    addAudit('Status Changed', { receiptId: batchId, po: oldHeader?.bestellNr || '-', oldStatus: oldHeader?.status || '-', newStatus });
     setReceiptHeaders(prev => prev.map(h => h.batchId === batchId ? { ...h, status: newStatus } : h));
 
     // When manually closing (Abgeschlossen), propagate to master + PO
@@ -287,6 +316,7 @@ export default function App() {
   };
 
   const handleAddComment = (batchId: string, type: 'note' | 'email' | 'call', message: string) => {
+    addAudit('Comment Added', { receiptId: batchId, type, messagePreview: message.substring(0, 60) });
     const newComment: ReceiptComment = {
       id: crypto.randomUUID(),
       batchId,
@@ -300,18 +330,23 @@ export default function App() {
   };
 
   const handleAddTicket = (ticket: Ticket) => {
+    addAudit('Ticket Created', { ticketId: ticket.id, subject: ticket.subject, priority: ticket.priority, receiptId: ticket.receiptId });
     setTickets(prev => [...prev, ticket]);
   };
 
   const handleUpdateTicket = (ticket: Ticket) => {
+    const old = tickets.find(t => t.id === ticket.id);
+    if (old && old.status !== ticket.status) {
+      addAudit('Ticket Status Changed', { ticketId: ticket.id, subject: ticket.subject, oldStatus: old.status, newStatus: ticket.status });
+    }
     setTickets(prev => prev.map(t => t.id === ticket.id ? ticket : t));
   };
 
   const handleCreateOrder = (order: PurchaseOrder) => {
+    const exists = purchaseOrders.some(o => o.id === order.id);
+    addAudit(exists ? 'Order Updated' : 'Order Created', { po: order.id, supplier: order.supplier, itemCount: order.items.length, status: order.status });
     setPurchaseOrders(prev => {
         // Upsert Logic: Check if ID exists
-        const exists = prev.some(o => o.id === order.id);
-        
         if (exists) {
             // Update existing record
             return prev.map(o => o.id === order.id ? order : o);
@@ -327,10 +362,12 @@ export default function App() {
   };
 
   const handleArchiveOrder = (id: string) => {
+    addAudit('Order Archived', { po: id });
     setPurchaseOrders(prev => prev.map(o => o.id === id ? { ...o, isArchived: true } : o));
   };
 
   const handleCancelOrder = (id: string) => {
+    addAudit('Order Cancelled', { po: id });
     setPurchaseOrders(prev => prev.map(o => {
       if (o.id === id) {
         return { ...o, status: 'Storniert' }; 
@@ -353,6 +390,7 @@ export default function App() {
   const handleQuickReceipt = (poId: string) => {
     const po = purchaseOrders.find(p => p.id === poId);
     if (!po) return;
+    addAudit('Quick Receipt Created', { po: poId, supplier: po.supplier, itemCount: po.items.length });
 
     const batchId = `b-${Date.now()}`;
     const timestamp = Date.now();
@@ -757,12 +795,15 @@ export default function App() {
         }, 500);
     }
 
+    addAudit('Receipt Confirmed', { receiptId: batchId, po: headerData.bestellNr || '-', lieferschein: headerData.lieferscheinNr, status: finalReceiptStatus, itemCount: cartItems.length, isProject });
+
     handleNavigation('receipt-management');
   };
 
   const handleRevertReceipt = (batchId: string) => {
       const header = receiptHeaders.find(h => h.batchId === batchId);
       if (!header) return;
+      addAudit('Receipt Reverted', { receiptId: batchId, po: header.bestellNr || '-', lieferschein: header.lieferscheinNr });
 
       const poId = header.bestellNr;
       const linkedPO = purchaseOrders.find(p => p.id === poId);
@@ -840,6 +881,7 @@ export default function App() {
   const handleProcessReturn = (poId: string, data: { quantity: number; reason: string; carrier: string; trackingId: string }) => {
       const po = purchaseOrders.find(p => p.id === poId);
       if (!po) return;
+      addAudit('Return Processed', { po: poId, quantity: data.quantity, reason: data.reason, carrier: data.carrier || '-', trackingId: data.trackingId || '-' });
 
       const master = receiptMasters.find(m => m.poId === poId);
       if (!master) return;
