@@ -382,6 +382,9 @@ export default function App() {
   };
 
   const handleReceiveGoods = (poId: string, mode: 'standard' | 'return' | 'problem' = 'standard') => {
+    if (mode === 'problem') {
+      addAudit('Reinspection Started', { po: poId, reason: 'Nachträgliche Korrektur via Problem-Button' });
+    }
     setSelectedPoId(poId);
     setGoodsReceiptMode(mode);
     handleNavigation('goods-receipt');
@@ -502,6 +505,7 @@ export default function App() {
           const oldHeader = receiptHeaders.find(h => h.lieferscheinNr === lastDelivery.lieferscheinNr && h.bestellNr === oldPoId);
           if (oldHeader) {
             setReceiptHeaders(prev => prev.map(h => h.batchId === oldHeader.batchId ? { ...h, status: 'Storniert' } : h));
+            addAudit('Receipt Nullified', { oldReceiptId: oldHeader.batchId, newReceiptId: batchId, po: oldPoId, oldLieferschein: lastDelivery.lieferscheinNr, reason: 'Nachträgliche Korrektur via Problem-Button', canceledItems: lastDelivery.items.map(i => ({ sku: i.sku, qtyReversed: i.quantityAccepted })) });
           }
           // 5. Build local map of canceled quantities (avoids stale React state)
           lastDelivery.items.forEach(oldItem => {
