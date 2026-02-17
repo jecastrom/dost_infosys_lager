@@ -216,7 +216,7 @@ export const CreateOrderWizard: React.FC<CreateOrderWizardProps> = ({
 
   // ═══════════════════════════════════════════════════════════
   return (
-    <div className={`h-full flex flex-col overflow-hidden ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
+    <div className={`h-[100dvh] md:h-full flex flex-col overflow-hidden ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
 
       {/* ── SUCCESS / ERROR OVERLAY ── */}
       {(submissionStatus === 'success' || submissionStatus === 'error') && createPortal(
@@ -424,8 +424,8 @@ export const CreateOrderWizard: React.FC<CreateOrderWizardProps> = ({
       {/* ══════════════════════════════════════════════════════
           SCROLLABLE CONTENT — only this region scrolls
           ══════════════════════════════════════════════════════ */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="max-w-xl mx-auto">
+      <div className="flex-1 min-h-0 overflow-hidden md:overflow-y-auto">
+          <div className={`max-w-xl mx-auto ${step !== 1 ? 'h-full flex flex-col md:block md:h-auto' : ''}`}>
 
             {/* ── STEP 1: Fixed, no scroll ── */}
             {step === 1 && (
@@ -466,19 +466,19 @@ export const CreateOrderWizard: React.FC<CreateOrderWizardProps> = ({
                     </button>
                   </div>
                   {/* Date row */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-1.5">
                     <div>
-                      <label className={`text-[11px] font-bold uppercase tracking-wider mb-1 block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Datum <span className="text-red-500">*</span></label>
+                      <label className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Datum <span className="text-red-500">*</span></label>
                       <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" size={14} />
-                        <input type="date" value={formData.orderDate} onChange={e => setFormData({ ...formData, orderDate: e.target.value })} className={`${inputCls} pl-9 py-2`} style={{ colorScheme: isDark ? 'dark' : 'light' }} />
+                        <Calendar className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-40 pointer-events-none z-10" size={10} />
+                        <input type="date" value={formData.orderDate} onChange={e => setFormData({ ...formData, orderDate: e.target.value })} className={`${inputCls} pl-5 pr-1 py-0.5 text-[11px] w-full`} style={{ colorScheme: isDark ? 'dark' : 'light', fontSize: '11px', height: '30px', minHeight: '0', WebkitAppearance: 'none', lineHeight: '1' }} />
                       </div>
                     </div>
                     <div>
-                      <label className={`text-[11px] font-bold uppercase tracking-wider mb-1 block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Liefertermin {requireDeliveryDate && <span className="text-red-500">*</span>}</label>
+                      <label className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Liefertermin {requireDeliveryDate && <span className="text-red-500">*</span>}</label>
                       <div className="relative">
-                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" size={14} />
-                        <input type="date" value={formData.expectedDeliveryDate} onChange={e => setFormData({ ...formData, expectedDeliveryDate: e.target.value })} className={`${inputCls} pl-9 py-2`} style={{ colorScheme: isDark ? 'dark' : 'light' }} />
+                        <Clock className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-40 pointer-events-none z-10" size={10} />
+                        <input type="date" value={formData.expectedDeliveryDate} onChange={e => setFormData({ ...formData, expectedDeliveryDate: e.target.value })} className={`${inputCls} pl-5 pr-1 py-0.5 text-[11px] w-full`} style={{ colorScheme: isDark ? 'dark' : 'light', fontSize: '11px', height: '30px', minHeight: '0', WebkitAppearance: 'none', lineHeight: '1' }} />
                       </div>
                     </div>
                   </div>
@@ -488,7 +488,7 @@ export const CreateOrderWizard: React.FC<CreateOrderWizardProps> = ({
 
             {/* ── STEP 2: Only list scrolls ── */}
             {step === 2 && (
-              <div className="px-4 pt-3 pb-4">
+              <div className="px-4 pt-3 pb-4 flex-1 min-h-0 overflow-y-auto md:flex-none md:min-h-0">
                 <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                   Positionen ({cart.filter(c => !c.isDeleted).length})
                 </h4>
@@ -525,7 +525,7 @@ export const CreateOrderWizard: React.FC<CreateOrderWizardProps> = ({
 
             {/* ── STEP 3: Only list scrolls ── */}
             {step === 3 && (
-              <div className="px-4 pt-3 pb-4">
+              <div className="px-4 pt-3 pb-4 flex-1 min-h-0 overflow-y-auto md:flex-none md:min-h-0">
                 <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                   Positionen ({cart.filter(c => !c.isDeleted).length})
                 </h4>
@@ -554,24 +554,24 @@ export const CreateOrderWizard: React.FC<CreateOrderWizardProps> = ({
               </div>
             )}
 
-            {(step === 2 || step === 3) && <div className="h-4" />}
+            {(step === 2 || step === 3) && <div className="hidden md:block h-6" />}
           </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════
           FIXED BOTTOM BUTTON — always visible, never occluded
           ══════════════════════════════════════════════════════ */}
-      <div className={`shrink-0 z-30 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
-        style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom, 0px))' }}>
-        <div className="max-w-xl mx-auto px-4 pt-1.5">
+      <div className={`shrink-0 z-30 border-t fixed bottom-0 left-0 right-0 md:static ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}
+        style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}>
+        <div className="max-w-xl mx-auto px-4 pt-2.5 md:flex md:justify-end">
           {step < 3 ? (
             <button onClick={() => setStep(p => (p + 1) as any)} disabled={!canGoNext()}
-              className={`w-full md:w-auto px-6 py-[9px] rounded-lg font-semibold inline-flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] text-[13px] text-white ${canGoNext() ? 'bg-[#0077B5] hover:bg-[#005f8f] shadow-sm shadow-blue-500/15' : 'bg-slate-300 dark:bg-slate-700 shadow-none cursor-not-allowed'}`}>
+              className={`w-full md:w-auto px-6 py-3 md:py-[9px] rounded-xl md:rounded-lg font-bold md:font-semibold inline-flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] text-sm md:text-[13px] text-white ${canGoNext() ? 'bg-[#0077B5] hover:bg-[#005f8f] shadow-md md:shadow-sm shadow-blue-500/25 md:shadow-blue-500/15' : 'bg-slate-300 dark:bg-slate-700 shadow-none cursor-not-allowed'}`}>
               Weiter <ArrowRight size={15} strokeWidth={2.5} />
             </button>
           ) : (
             <button onClick={handleSubmit} disabled={submissionStatus === 'submitting'}
-              className="w-full md:w-auto px-8 py-[9px] bg-[#0077B5] hover:bg-[#005f8f] rounded-lg font-semibold shadow-sm shadow-blue-500/15 disabled:opacity-40 inline-flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] text-[13px] text-white">
+              className="w-full md:w-auto px-8 py-3 md:py-[9px] bg-[#0077B5] hover:bg-[#005f8f] rounded-xl md:rounded-lg font-bold md:font-semibold shadow-md md:shadow-sm shadow-blue-500/25 md:shadow-blue-500/15 disabled:opacity-40 inline-flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] text-sm md:text-[13px] text-white">
               {submissionStatus === 'submitting' ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
               {initialOrder ? 'Aktualisieren' : 'Bestellung erstellen'}
             </button>
