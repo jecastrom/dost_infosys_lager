@@ -88,8 +88,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   const [expandedDeliveryId, setExpandedDeliveryId] = useState<string | null>(null);
 
   // Mobile action menu state
-  const [showMobileActionMenu, setShowMobileActionMenu] = useState<string | null>(null)
-  const [showCloseConfirm, setShowCloseConfirm] = useState(false)
+  const [showMobileActionMenu, setShowMobileActionMenu] = useState<string | null>(null);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [showArchived, setShowArchived] = useState(false)
   const [archivedReceiptGroups, setArchivedReceiptGroups] = useState<Set<string>>(() => {
     if (typeof window !== 'undefined') {
