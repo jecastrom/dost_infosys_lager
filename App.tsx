@@ -17,6 +17,7 @@ import { ReceiptManagement } from './components/ReceiptManagement';
 import { OrderManagement } from './components/OrderManagement';
 import { CreateOrderWizard } from './components/CreateOrderWizard';
 import { SettingsPage, TicketConfig } from './components/SettingsPage';
+import { GlobalSettingsPage } from './components/GlobalSettingsPage';
 import { DocumentationPage } from './components/DocumentationPage';
 import { StockLogView } from './components/StockLogView';
 import { LogicInspector } from './components/LogicInspector';
@@ -1249,14 +1250,37 @@ export default function App() {
                     onSetSidebarMode={handleSetSidebarMode}
                     inventoryViewMode={inventoryViewMode}
                     onSetInventoryViewMode={handleSetInventoryViewMode}
-                    requireDeliveryDate={requireDeliveryDate}
-                    onSetRequireDeliveryDate={handleSetRequireDeliveryDate}
-                    enableSmartImport={enableSmartImport}
-                    onSetEnableSmartImport={handleSetEnableSmartImport}
-                    ticketConfig={ticketConfig}
-                    onSetTicketConfig={handleSetTicketConfig}
+                  />
+                )}
+
+                {activeModule === 'global-settings' && (
+                  <GlobalSettingsPage
+                    theme={theme}
+                    onNavigate={handleNavigation}
                     statusColumnFirst={statusColumnFirst}
                     onSetStatusColumnFirst={handleSetStatusColumnFirst}
+                    enableSmartImport={enableSmartImport}
+                    onSetEnableSmartImport={handleSetEnableSmartImport}
+                    requireDeliveryDate={requireDeliveryDate}
+                    onSetRequireDeliveryDate={handleSetRequireDeliveryDate}
+                    ticketConfig={ticketConfig}
+                    onSetTicketConfig={handleSetTicketConfig}
+                    auditTrail={auditTrail}
+                  />
+                )}
+
+                {activeModule === 'global-settings' && (
+                  <GlobalSettingsPage
+                    theme={theme}
+                    onNavigate={handleNavigation}
+                    statusColumnFirst={statusColumnFirst}
+                    onSetStatusColumnFirst={handleSetStatusColumnFirst}
+                    enableSmartImport={enableSmartImport}
+                    onSetEnableSmartImport={handleSetEnableSmartImport}
+                    requireDeliveryDate={requireDeliveryDate}
+                    onSetRequireDeliveryDate={handleSetRequireDeliveryDate}
+                    ticketConfig={ticketConfig}
+                    onSetTicketConfig={handleSetTicketConfig}
                     auditTrail={auditTrail}
                   />
                 )}
