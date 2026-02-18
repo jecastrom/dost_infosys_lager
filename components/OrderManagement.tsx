@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
@@ -204,6 +205,7 @@ interface OrderManagementProps {
   receiptMasters: ReceiptMaster[];
   onNavigate: (module: ActiveModule) => void;
   tickets: Ticket[];
+  statusColumnFirst?: boolean;
 }
 
 export const OrderManagement: React.FC<OrderManagementProps> = ({ 
@@ -217,7 +219,8 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
     onUpdateOrder,
     receiptMasters, 
     onNavigate, 
-    tickets 
+    tickets,
+    statusColumnFirst = false
 }) => {
   const isDark = theme === 'dark';
   const [searchTerm, setSearchTerm] = useState('');
@@ -638,10 +641,11 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
            <table className="w-full text-left text-sm min-w-[800px]">
              <thead className={`border-b ${isDark ? 'bg-slate-950 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
                <tr>
+                 {statusColumnFirst && <th className="px-4 py-3 font-semibold w-64">Status</th>}
                  <th className="px-4 py-3 font-semibold">Bestell Nummer</th>
+                 {!statusColumnFirst && <th className="px-4 py-3 font-semibold w-64">Status</th>}
                  <th className="px-4 py-3 font-semibold">Datum</th>
                  <th className="px-4 py-3 font-semibold">Lieferant</th>
-                 <th className="px-4 py-3 font-semibold w-64">Status</th>
                  <th className="px-4 py-3 font-semibold text-center">Bestätigung</th>
                  <th className="px-4 py-3 font-semibold text-center">Pos.</th>
                  <th className="px-4 py-3 font-semibold text-right">Aktion</th>
@@ -658,7 +662,21 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
 
                   return (
                   <tr key={order.id} onClick={() => setSelectedOrder(order)} className={`cursor-pointer transition-colors ${order.isArchived ? (isDark ? 'bg-slate-900/50 text-slate-500 hover:bg-slate-800/50' : 'bg-slate-50 text-slate-400 hover:bg-slate-100') : (isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-50')}`}>
+                    {statusColumnFirst && (
+                    <td className="px-4 py-3 align-middle">
+                        <div className="h-full flex items-center">
+                            <OrderStatusBadges order={order} linkedReceipt={linkedReceipt} theme={theme} />
+                        </div>
+                    </td>
+                    )}
                     <td className="px-4 py-3 align-middle font-mono font-bold text-[#0077B5]">{order.id}</td>
+                    {!statusColumnFirst && (
+                    <td className="px-4 py-3 align-middle">
+                        <div className="h-full flex items-center">
+                            <OrderStatusBadges order={order} linkedReceipt={linkedReceipt} theme={theme} />
+                        </div>
+                    </td>
+                    )}
                     <td className="px-4 py-3 align-middle">
                         <div className="flex flex-col text-slate-500 text-xs">
                             <span className="flex items-center gap-2 font-bold mb-0.5"><Calendar size={12} /> {new Date(order.dateCreated).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
@@ -669,11 +687,6 @@ export const OrderManagement: React.FC<OrderManagementProps> = ({
                     </td>
                     <td className="px-4 py-3 align-middle font-medium">
                         <div className="flex items-center gap-2"><Truck size={14} className="text-slate-400"/> {order.supplier}</div>
-                    </td>
-                    <td className="px-4 py-3 align-middle">
-                        <div className="h-full flex items-center">
-                            <OrderStatusBadges order={order} linkedReceipt={linkedReceipt} theme={theme} />
-                        </div>
                     </td>
                     <td className="px-4 py-3 align-middle text-center">
                         {hasLink ? (

@@ -29,6 +29,8 @@ interface SettingsPageProps {
   onSetEnableSmartImport: (enabled: boolean) => void;
   ticketConfig: TicketConfig;
   onSetTicketConfig: (config: TicketConfig) => void;
+  statusColumnFirst: boolean;
+  onSetStatusColumnFirst: (val: boolean) => void;
   auditTrail?: AuditEntry[];
 }
 
@@ -49,13 +51,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   onSetEnableSmartImport,
   ticketConfig,
   onSetTicketConfig,
+  statusColumnFirst,
+  onSetStatusColumnFirst,
   auditTrail = []
 }) => {
   const isDark = theme === 'dark';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isTicketConfigOpen, setIsTicketConfigOpen] = useState(false);
   const [isAuditOpen, setIsAuditOpen] = useState(false);
-  const [auditDisplayCount, setAuditDisplayCount] = useState(50);
 
   // Helper to parse ASP.NET AJAX Date format "/Date(1732871995000)/"
   const parseAspDate = (dateStr: string | null): number | undefined => {
@@ -222,6 +225,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                     Voll
                 </button>
             </div>
+          }
+        />
+
+        <SettingRow 
+          icon={<List size={20} />}
+          label="Status-Spalte zuerst in Tabellen"
+          description="Status als erste Spalte in Bestell- und Wareneingangstabellen anzeigen."
+          action={
+            <Toggle checked={statusColumnFirst} onChange={onSetStatusColumnFirst} />
           }
         />
 
@@ -504,14 +516,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           {isAuditOpen ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
         </button>
 
-        <div style={{ maxHeight: isAuditOpen ? '9999px' : '0px', transition: 'max-height 200ms ease', overflow: 'hidden' }}>
+        <div style={{ maxHeight: isAuditOpen ? `${Math.max(auditTrail.slice(0, 50).length * 72 + 16, 60)}px` : '0px', transition: 'max-height 200ms ease', overflow: 'hidden' }}>
           <div className="overflow-y-auto" style={{ maxHeight: '400px' }}>
             {auditTrail.length === 0 ? (
               <div className={`px-6 py-10 text-center text-sm italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                 No audit events yet
               </div>
             ) : (
-              auditTrail.slice(0, auditDisplayCount).map(entry => (
+              auditTrail.slice(0, 50).map(entry => (
                 <div key={entry.id} className={`px-6 py-3 border-b last:border-0 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                     <span className={`font-bold text-sm ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{entry.event}</span>
@@ -532,16 +544,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   </div>
                 </div>
               ))
-            )}
-            {auditTrail.length > auditDisplayCount && (
-              <div className={`px-6 py-3 border-t ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-                <button
-                  onClick={() => setAuditDisplayCount(prev => prev + 50)}
-                  className={`w-full px-4 py-2.5 rounded-xl text-sm font-bold transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}
-                >
-                  Weitere laden ({auditTrail.length - auditDisplayCount} verbleibend)
-                </button>
-              </div>
             )}
           </div>
         </div>

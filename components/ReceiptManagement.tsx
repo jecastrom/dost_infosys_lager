@@ -31,6 +31,7 @@ interface ReceiptManagementProps {
   onRevertReceipt: (batchId: string) => void;
   onInspect: (po: PurchaseOrder, mode?: 'standard' | 'return' | 'problem') => void;
   onProcessReturn: (poId: string, data: { quantity: number; reason: string; carrier: string; trackingId: string }) => void;
+  statusColumnFirst?: boolean;
 }
 
 // Extended Type for Grouped Rows
@@ -62,7 +63,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
   onNavigate,
   onRevertReceipt,
   onInspect,
-  onProcessReturn
+  onProcessReturn,
+  statusColumnFirst = false
 }) => {
   const isDark = theme === 'dark';
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
@@ -1279,8 +1281,9 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
              <table className="w-full text-left text-sm min-w-[1000px]">
                <thead className={`border-b ${isDark ? 'bg-slate-950 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
                  <tr>
-                   <th className="p-4 font-semibold">Status</th>
+                   {statusColumnFirst && <th className="p-4 font-semibold">Status</th>}
                    <th className="p-4 font-semibold">Bestell Nr.</th>
+                   {!statusColumnFirst && <th className="p-4 font-semibold">Status</th>}
                    <th className="p-4 font-semibold text-center">Bestellbestätigung</th>
                    <th className="p-4 font-semibold">Lieferschein</th>
                    <th className="p-4 font-semibold">Lieferant</th>
@@ -1303,8 +1306,8 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                       onClick={() => handleOpenDetail(row)}
                       className={`cursor-pointer transition-colors ${row.isArchived ? (isDark ? 'bg-slate-900/50 opacity-60 hover:bg-slate-800/50' : 'bg-slate-50 opacity-60 hover:bg-slate-100') : (isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-50')}`}
                     >
+                      {statusColumnFirst && (
                       <td className="p-4">
-                        {/* USE CONSISTENT BADGE COMPONENT */}
                         <ReceiptStatusBadges 
                             header={row}
                             master={linkedMaster} 
@@ -1313,6 +1316,7 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                             theme={theme}
                         />
                       </td>
+                      )}
                       <td className="p-4 font-medium text-slate-600 dark:text-slate-400">
                           {row.isGroup ? (
                               <div className="flex items-center gap-2">
@@ -1320,9 +1324,20 @@ export const ReceiptManagement: React.FC<ReceiptManagementProps> = ({
                                   <span className="font-bold">{row.bestellNr}</span>
                               </div>
                           ) : (
-                              row.bestellNr || 'â€“'
+                              row.bestellNr || '—'
                           )}
                       </td>
+                      {!statusColumnFirst && (
+                      <td className="p-4">
+                        <ReceiptStatusBadges 
+                            header={row}
+                            master={linkedMaster} 
+                            linkedPO={linkedPO} 
+                            tickets={rowTickets}
+                            theme={theme}
+                        />
+                      </td>
+                      )}
                       <td className="p-4 text-center">
                         {linkedPO?.pdfUrl ? (
                            <div className="flex justify-center" title="BestÃ¤tigung vorhanden">

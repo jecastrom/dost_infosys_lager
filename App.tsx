@@ -138,6 +138,14 @@ export default function App() {
     return true;
   });
 
+  // Status Column Position Setting
+  const [statusColumnFirst, setStatusColumnFirst] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+        return localStorage.getItem('statusColumnFirst') === 'true';
+    }
+    return false;
+  });
+
   // Ticket Automation Config State
   // UPDATED: All defaults set to TRUE for maximum coverage
   const [ticketConfig, setTicketConfig] = useState<TicketConfig>(() => {
@@ -230,6 +238,11 @@ export default function App() {
   const handleSetEnableSmartImport = (enabled: boolean) => {
     setEnableSmartImport(enabled);
     localStorage.setItem('enableSmartImport', String(enabled));
+  };
+
+  const handleSetStatusColumnFirst = (val: boolean) => {
+    setStatusColumnFirst(val);
+    localStorage.setItem('statusColumnFirst', String(val));
   };
 
   // Ticket Config Handler
@@ -1181,6 +1194,7 @@ export default function App() {
                     onRevertReceipt={handleRevertReceipt}
                     onProcessReturn={handleProcessReturn}
                     onInspect={(po, mode) => handleReceiveGoods(po.id, mode as 'standard' | 'return' | 'problem')} // Pass mode to handler
+                    statusColumnFirst={statusColumnFirst}
                   />
                 )}
                 
@@ -1210,6 +1224,7 @@ export default function App() {
                      receiptMasters={receiptMasters}
                      onNavigate={handleNavigation}
                      tickets={tickets}
+                     statusColumnFirst={statusColumnFirst}
                   />
                 )}
 
@@ -1240,6 +1255,8 @@ export default function App() {
                     onSetEnableSmartImport={handleSetEnableSmartImport}
                     ticketConfig={ticketConfig}
                     onSetTicketConfig={handleSetTicketConfig}
+                    statusColumnFirst={statusColumnFirst}
+                    onSetStatusColumnFirst={handleSetStatusColumnFirst}
                     auditTrail={auditTrail}
                   />
                 )}
