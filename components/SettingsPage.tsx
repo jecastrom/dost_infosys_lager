@@ -1,5 +1,3 @@
-
-
 import React, { useRef, useState } from 'react';
 import { Theme, StockItem, RawGermanItem, ActiveModule } from '../types';
 import { Book, ChevronRight, Moon, Sun, Monitor, Shield, Info, Upload, Trash2, Database, AlertCircle, CheckCircle2, Users, LayoutPanelLeft, List, LayoutGrid, Bug, Eye } from 'lucide-react';
