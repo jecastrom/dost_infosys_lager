@@ -216,7 +216,7 @@ export const CreateOrderWizard: React.FC<CreateOrderWizardProps> = ({
 
   // ═══════════════════════════════════════════════════════════
   return (
-    <div className={`h-full flex flex-col overflow-hidden ${isDark ? 'bg-slate-900' : 'bg-white'}`} style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}>
+    <div className={`h-full flex flex-col overflow-hidden ${isDark ? 'bg-slate-900' : 'bg-white'}`} style={{ touchAction: 'none', overscrollBehavior: 'none', position: 'relative' }}>
 
       {/* ── SUCCESS / ERROR OVERLAY ── */}
       {(submissionStatus === 'success' || submissionStatus === 'error') && createPortal(
@@ -296,7 +296,7 @@ export const CreateOrderWizard: React.FC<CreateOrderWizardProps> = ({
       {/* ══════════════════════════════════════════════════════
           FIXED HEADER — pinned top, never scrolls
           ══════════════════════════════════════════════════════ */}
-      <div className={`shrink-0 z-30 ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
+      <div className={`shrink-0 z-20 ${isDark ? 'bg-slate-900' : 'bg-white'}`} style={{ touchAction: 'none' }}>
         <div className="max-w-xl mx-auto">
           {/* Nav: Back | Steps | Close */}
           <div className="flex items-center justify-between px-4 pt-3 pb-2">
