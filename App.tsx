@@ -1253,21 +1253,7 @@ export default function App() {
                   />
                 )}
 
-                {activeModule === 'global-settings' && (
-                  <GlobalSettingsPage
-                    theme={theme}
-                    onNavigate={handleNavigation}
-                    statusColumnFirst={statusColumnFirst}
-                    onSetStatusColumnFirst={handleSetStatusColumnFirst}
-                    enableSmartImport={enableSmartImport}
-                    onSetEnableSmartImport={handleSetEnableSmartImport}
-                    requireDeliveryDate={requireDeliveryDate}
-                    onSetRequireDeliveryDate={handleSetRequireDeliveryDate}
-                    ticketConfig={ticketConfig}
-                    onSetTicketConfig={handleSetTicketConfig}
-                    auditTrail={auditTrail}
-                  />
-                )}
+          
 
                 {activeModule === 'global-settings' && (
                   <GlobalSettingsPage
